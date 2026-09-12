@@ -17,6 +17,7 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-11）
 | Day | 日期 | 主题 | 产出 | 状态 |
 |---|---|---|---|---|
 | 1 | 9/11 | 环境 + 类型系统 | [日志](notes/day01.md) · [题面](notes/day01-types.md) · [错题本](notes/day01-mistakes.md) · [预测题作答](week1-language/day01-types-prediction.js) | ✅ |
+| 2 | 9/12 | 函数与作用域 | [日志](notes/day02.md) · [学习指引](notes/day02-functions.md) | 🔄 进行中 |
 
 ## 项目
 
@@ -44,3 +45,5 @@ notes/dayNN-mistakes.md  每日错题本（逐题记录 + 错因聚类 + 复练�
 - [Day 1 — 2026-09-11](notes/day01.md) —— 环境搭建 + JS 类型系统，26 道预测题作答
   - 学习指引：[Day 1 学习指引：JS 类型系统](notes/day01-types.md)
   - 错题本：[Day 1 错题本](notes/day01-mistakes.md)（26 题：10 对 / 5 错 / 11 空白）
+- [Day 2 — 2026-09-12](notes/day02.md) —— 函数与作用域（进行中）
+  - 学习指引：[Day 2 学习指引：函数与作用域](notes/day02-functions.md)
