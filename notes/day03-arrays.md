@@ -122,15 +122,15 @@
 
 ### `week1-language/day03-array-methods.js` 清单（9 项，全部要 `console.log` 出结果）
 
-- [ ] `map` / `filter` / `find` / `findIndex` 各写一个 demo
-- [ ] `reduce` 做三件事：求和、求平均、把数组转成对象（用 `reduce` 累积 + `Object.fromEntries` 各写一遍）
-- [ ] 复现 `sort` 的坑：打印 `[10,9,100].sort()` 得到 `[10,100,9]`，再用比较函数修正成 `[9,10,100]`
-- [ ] `flat(2)` 打印出 `[1,2,3,[4]]`，再 `flat(Infinity)` 打印出 `[1,2,3,4]`
-- [ ] `flatMap` 一个实际用途（比如给每个元素生成两条记录）
-- [ ] `Object.entries` 遍历对象，再用 `Object.fromEntries` 转回对象
-- [ ] **不可变更新模式**：`toSorted` / `toReversed` / `with` / `toSpliced` 各写一遍，**每组前后都打印原数组，证明原数组没变**
-- [ ] `structuredClone` 深拷贝嵌套对象，改副本后打印原对象证明未受影响
-- [ ] **实战**：把 `[{name, age}, ...]` 按 `age` 排序，**不修改原数组**（不可变更新的真实用法；后面写 React / Redux 和任何"状态"都是这套）
+- [√] `map` / `filter` / `find` / `findIndex` 各写一个 demo
+- [√] `reduce` 做三件事：求和、求平均、把数组转成对象（用 `reduce` 累积 + `Object.fromEntries` 各写一遍）
+- [√] 复现 `sort` 的坑：打印 `[10,9,100].sort()` 得到 `[10,100,9]`，再用比较函数修正成 `[9,10,100]`
+- [√] `flat(2)` 打印出 `[1,2,3,[4]]`，再 `flat(Infinity)` 打印出 `[1,2,3,4]`
+- [√] `flatMap` 一个实际用途（比如给每个元素生成两条记录）
+- [√] `Object.entries` 遍历对象，再用 `Object.fromEntries` 转回对象
+- [√] **不可变更新模式**：`toSorted` / `toReversed` / `with` / `toSpliced` 各写一遍，**每组前后都打印原数组，证明原数组没变**
+- [√] `structuredClone` 深拷贝嵌套对象，改副本后打印原对象证明未受影响
+- [√] **实战**：把 `[{name, age}, ...]` 按 `age` 排序，**不修改原数组**（不可变更新的真实用法；后面写 React / Redux 和任何"状态"都是这套）
 
 > **为什么今天专门练"不可变更新"**：§六 面试题库里"深浅拷贝"是高频点；而且 `toSorted` 这类 ES2023 方法只有较新的 Node 才有——以后再看到 `sort()`，先问自己一句"我是不是把调用方的数组改了"。
 >

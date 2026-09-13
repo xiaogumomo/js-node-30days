@@ -1,6 +1,8 @@
 # js-node-30days
 
-JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-11）
+JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-12，32 天）
+
+> **日程已重排 2 次**（详见 `js-node-30day-plan.md` §四「进度看板与再计划机制」）。最近一次在 Day 3 结束时：补入两个缺失的前置章节（`setTimeout` 调度、装饰器与 call/apply），四个裸写函数拆成两天，结束日 10/11 → **10/12**。
 
 ## 进度
 
@@ -17,8 +19,9 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-11）
 | Day | 日期 | 主题 | 产出 | 状态 |
 |---|---|---|---|---|
 | 1 | 9/11 | 环境 + 类型系统 | [日志](notes/day01.md) · [题面](notes/day01-types.md) · [错题本](notes/day01-mistakes.md) · [预测题作答](week1-language/day01-types-prediction.js) | ✅ |
-| 2 | 9/12 | 函数与作用域 | [日志](notes/day02.md) · [学习指引](notes/day02-functions.md) · [练习记录](week1-language/day02-functions-practice.js) | ⚠️ 约 30%，欠账 0.7 天已并入 Day 3 |
-| 3 | 9/13 | 补 Day 2 + 数组与对象 | [日志](notes/day03.md) · [学习指引](notes/day03-arrays.md) · 欠账清单见 [Day 2 日志](notes/day02.md) | 🔄 进行中 |
+| 2 | 9/12 | 函数与作用域 | [日志](notes/day02.md) · [学习指引](notes/day02-functions.md) · [练习记录](week1-language/day02-functions-practice.js) | ⚠️ 约 30%，阅读欠账已在 Day 3 清掉 |
+| 3 | 9/13 | 补 Day 2 + 数组与对象 | [日志](notes/day03.md) · [学习指引](notes/day03-arrays.md) · [作用域练习](week1-language/day02-scope.js) · [数组方法](week1-language/day03-array-methods.js) · [浅拷贝](week1-language/day02-clone.js) · [数组浅拷贝](week1-language/day02-clone-array.js) | ⚠️ 约 52%，四个裸写函数转入 Day 4–5 |
+| 4 | 9/14 | 前置两章 + 裸写 debounce | `setTimeout` 调度 + 装饰器/call-apply（含官方「防抖装饰器」任务） | ⬜ |
 
 ## 项目
 
