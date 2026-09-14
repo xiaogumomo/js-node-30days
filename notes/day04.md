@@ -81,3 +81,21 @@ git add -A
 git commit -m "day04: setTimeout + decorator chapter, write debounce"
 git push
 ```
+
+---
+
+## AI 复核（产出物 2：数组第 7、8 项重做）
+
+**实跑复核**：`node week1-language/day04-array-methods.js`（Node v24.21.0，2026-09-14）——第 7、8 项**合格**，第 ③ 段**跑不通**。
+
+| 项 | 结论 | 说明 |
+|---|---|---|
+| 第 7 项 不可更新 | ✅ 合格 | 四个方法都接住了返回值；实测原数组始终是 `[1,5,3,4]`，昨天的"证明不了"解决了 |
+| 第 7 项 的 `sort()` 对照 | ⬜ 未做 | 原要求里"再加一组原位 `sort()` 的对照"漏了 |
+| 第 8 项 嵌套对象 | ✅ 基本合格 | 浅拷贝改副本 → 原对象变 `'LA'`；`structuredClone` 改副本 → 原对象不变。对比成立 |
+| 第 8 项 的瑕疵 | ⚠️ 小问题 | ②克隆的是"已被①改过"的那个对象，结论要靠推理才看得出；①②各用独立对象会更干净 |
+| 第 ③ 段 循环引用 | ❌ 跑不通 | 第 38 行 `JSON.stringify` 抛 `TypeError: Converting circular structure to JSON`，**整个脚本在此中断**，后面的 `structuredClone` 根本没执行到 |
+
+详细现象、真实报错原文、以及每处的改法，都写在文件头部注释里：`week1-language/day04-array-methods.js`。
+
+**这一次的教训（连续第 4 次"写完没运行"）**：这个文件不需要测试脚手架，直接 `node week1-language/day04-array-methods.js` 就能跑。而且**只跑这一次**，上面三处问题会全部自己暴露出来——包括那个中断脚本的 `TypeError`。跑一遍的成本是 3 秒，不跑的成本是带着错误写下一份代码。
