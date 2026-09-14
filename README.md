@@ -21,7 +21,7 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-12，32 天）
 | 1 | 9/11 | 环境 + 类型系统 | [日志](notes/day01.md) · [题面](notes/day01-types.md) · [错题本](notes/day01-mistakes.md) · [预测题作答](week1-language/day01-types-prediction.js) | ✅ |
 | 2 | 9/12 | 函数与作用域 | [日志](notes/day02.md) · [学习指引](notes/day02-functions.md) · [练习记录](week1-language/day02-functions-practice.js) | ⚠️ 约 30%，阅读欠账已在 Day 3 清掉 |
 | 3 | 9/13 | 补 Day 2 + 数组与对象 | [日志](notes/day03.md) · [学习指引](notes/day03-arrays.md) · [作用域练习](week1-language/day02-scope.js) · [数组方法](week1-language/day03-array-methods.js) · [浅拷贝](week1-language/day02-clone.js) · [数组浅拷贝](week1-language/day02-clone-array.js) | ⚠️ 约 52%，四个裸写函数转入 Day 4–5 |
-| 4 | 9/14 | 定时器 + 装饰器 + 裸写 debounce | [日志](notes/day04.md) · [学习指引](notes/day04-timers.md) · [debounce 验证脚手架](week1-language/day04-debounce-verify.js) | 🔄 进行中 |
+| 4 | 9/14 | 定时器 + 装饰器 + 裸写 debounce + 深克隆 | [日志](notes/day04.md) · [学习指引](notes/day04-timers.md) · [debounce 脚手架](week1-language/day04-debounce-verify.js) · [深克隆脚手架](week1-language/day04-clone-verify.js) · [浅拷贝+深克隆](week1-language/day02-clone.js) · [递归章练习](week1-language/day04-clone-practice.js) | ✅ 全绿（debounce 6/6、数组 7/8 项、深克隆 17/17） |
 
 ## 项目
 
@@ -55,6 +55,9 @@ notes/dayNN-mistakes.md  每日错题本（逐题记录 + 错因聚类 + 复练�
 - [Day 3 — 2026-09-13](notes/day03.md) —— 补 Day 2 + 数组与对象（部分完成约 52%，四个裸写函数转入 Day 4–5）
   - 学习指引：[Day 3 学习指引：补 Day 2 + 数组与对象](notes/day03-arrays.md)
   - 日志里保留了本人手写的「学会了什么」「卡在哪里」「探索 TODO」原文，AI 复核单独成节
-- [Day 4 — 2026-09-14](notes/day04.md) —— 拆掉"无从下手"的墙：定时器 + 装饰器 + 裸写 debounce（进行中）
+- [Day 4 — 2026-09-14](notes/day04.md) —— 拆掉"无从下手"的墙：定时器 + 装饰器 + 裸写 debounce（✅ 全绿）
   - 学习指引：[Day 4 学习指引：定时器 + 装饰器 + 裸写 debounce](notes/day04-timers.md)
-  - 验证脚手架：[debounce 验证脚手架](week1-language/day04-debounce-verify.js)（按计划 §一，"测试允许让 AI 写"；实现由本人写）
+  - 验证脚手架（按计划 §一，"测试允许让 AI 写"，实现由本人写）：
+    [debounce 验证脚手架](week1-language/day04-debounce-verify.js)（6/6 通过）、
+    [深克隆验证脚手架](week1-language/day04-clone-verify.js)（17/17 通过 + 2 个局限探针）
+  - 当日产出：[浅拷贝三种写法 + 手写深克隆](week1-language/day02-clone.js)、[递归章练习](week1-language/day04-clone-practice.js)
