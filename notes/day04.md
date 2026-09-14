@@ -22,13 +22,38 @@
 
 ## 学会了什么
 
-1.
-2.
+1.func.call(context,arg1,arg2)
+2.深刻学习装饰器模式，并研究相关代码：
+function work(a,b){
+   console.log(a+b);
+}//原始函数，接受两个参数，然后输出它们的和
+
+function spy(func){//func 传进来的原函数
+    function wrapper(...args){//...args是rest参数（收集传入的所有参数，组成数组）多个参数=>一个数组
+        wrapper.calls.push(args);//填入数值到wrapper的calls属性中（ai完整版：将本次调用收到的参数数组args保存到wrapped.calls数组中）
+        return func.apply(this,args);//使用当前wrapper的this作为func的this，并把args数组展开为func的参数调用原函数
+
+    }
+    wrapper.calls=[];//给Wrapper创建个空数组属性，用来记录之后每次调用的参数
+    
+    return wrapper;
+}
+work = spy (work);
+
+work(1,2);
+work(4,5);
+
+for (let args of work.calls){
+    console.log("call:"+args.join());//将work中calls属性数组传入args中再用join合并成字符串
+}
+
 3.
 
 ## 卡在哪里
 
--
+1.func()这种形式其实跟this一样功能指代某个函数，但是每次看到还是一头雾水
+2.Map及其的一些功能（.set），需要自己去问下ai
+3.this的调用问题，分辨不出this到底指代谁
 
 ## 踩过的坑
 
