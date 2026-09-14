@@ -1,46 +1,40 @@
 // ============================================================
-// Day 4 产出物 2：数组清单第 7、8 项的重做
+// Day 4 产出物 2：数组清单第 7、8 项的重做（第 2 版）
 // 完成日期：2026-09-14（Day 4）
 // 来源：D:\code\2026\vs code\9.14\day04-array-methods.js（原样搬入，未改写）
 // 对应：day03-array-methods.js 里"做了但证明不了"的那两项
-// 实跑复核：node v24.21.0，2026-09-14（AI 逐个现象实测，不是推测）
+// 实跑复核：node v24.21.0，2026-09-14。**本版整个脚本跑到底，退出码 0**（上一版在第 38 行中断）
 //
-// 【第 7 项 不可更新演示】✅ 合格
-//   toSorted / toReversed / with / toSpliced 四个方法都接住了返回值，
-//   并且每个都打印了"新数组"和"原数组"。实测输出里原数组始终是 [1,5,3,4]：
-//     新数组： [ 1, 3, 4, 5 ]   原数组： [ 1, 5, 3, 4 ]
-//     新数组： [ 4, 3, 5, 1 ]   原数组： [ 1, 5, 3, 4 ]
-//     新数组： [ 99, 5, 3, 4 ]  原数组： [ 1, 5, 3, 4 ]
-//     新数组： [ 1, 1, 3, 4 ]   原数组： [ 1, 5, 3, 4 ]
-//   —— 昨天"只调用不接住、四次都只打印原数组"的问题解决了。
-//   ⬜ 还差一项：原要求里"再加一组 sort()（原位方法）的对照"没做。
-//      用同一个数组把 sort() 和 toSorted() 并排跑，一个改原数组一个不改，
-//      两组挨着才是一刀见血。
+// 【第 7 项 不可更新 + sort() 对照】✅ 完全合格
+//   四个非原位方法都接住了返回值，实测原数组始终是 [1,5,3,4]。
+//   新加的 sort() 对照成立 —— 同一组输出里，前四个方法原数组不变，sort() 变了：
+//     新数组： [ 1, 3, 4, 5 ]   原数组： [ 1, 5, 3, 4 ]   ← toSorted
+//     新数组： [ 4, 3, 5, 1 ]   原数组： [ 1, 5, 3, 4 ]   ← toReversed
+//     新数组： [ 99, 5, 3, 4 ]  原数组： [ 1, 5, 3, 4 ]   ← with
+//     新数组： [ 1, 1, 3, 4 ]   原数组： [ 1, 5, 3, 4 ]   ← toSpliced
+//     新数组： [ 1, 3, 4, 5 ]   原数组： [ 1, 3, 4, 5 ]   ← sort()「原位」：原数组被改了
+//   💡 更锋利的一行（实测）：console.log(arr.sort() === arr) → true
+//                              console.log(arr.toSorted() === arr) → false
+//      一行就说清"原位"和"非原位"的本质区别，比对比打印结果更直接。
 //
-// 【第 8 项 structuredClone 嵌套对象】✅ 基本合格（一处瑕疵）
-//   用嵌套对象做出了关键对比：
-//     ①拷贝前的原对象： { city: 'NY' }
-//     ①拷贝后的原对象： { city: 'LA' }   ← 浅拷贝改副本，原对象跟着变
-//     深拷贝的对象：   { city: 'ch' }
-//     ②深拷贝后的原对象： { city: 'LA' }  ← 深拷贝改副本，原对象不受影响
-//   ⚠️ 瑕疵：②里 structuredClone 克隆的是"已经被①改过"的 nested（city 已是 'LA'），
-//      所以最后这行打印 'LA' 需要读者自己推理才明白"它没被改成 'ch'"。
-//      更干净的写法：①②各用一个独立的原始对象，两组互不干扰。
+// 【第 8 项 structuredClone 嵌套对象】✅ 完全合格
+//   改成 ① ② 各用一个独立对象后，演示干净了：
+//     ①拷贝后的原对象： { city: 'LA' }   ← 浅拷贝改副本 → 原对象跟着变
+//     ②深拷贝后的原对象： { city: 'NY' } ← 改副本 city 为 'LA' 之后，原对象仍是 'NY'
+//     深拷贝修改后的对象： { city: 'LA' }
+//   两组的因果不再互相污染，"深拷贝没有连带修改原对象"一眼可见。
 //
-// 【第 ③ 段 JSON vs structuredClone 循环引用】❌ 这一段跑不通
-//   实测：第 38 行 `JSON.parse(JSON.stringify(a))` 直接抛错，**整个脚本在此中断**，
-//   后面的 structuredClone 根本没执行到。真实报错：
-//     TypeError: Converting circular structure to JSON
-//       --> starting at object with constructor 'Object'
-//       --- property 'address' closes the circle
-//       at JSON.stringify (<anonymous>)
-//   这一段的目的是"观察到"JSON 方式会炸、而 structuredClone 不会。要观察到它，
-//   必须用 try/catch 把错误接住再打印，否则脚本会被打断，你也就看不到后半段。
-//
-// 【本次最该记住的一条】这份文件没有跑过——这是第 4 次"写完没运行"
-//   （day02-scope.js、day02-clone.js、day03-array-methods.js、今天这份）。
-//   它不需要测试脚手架，直接 `node week1-language/day04-array-methods.js`
-//   就能看到上面那个报错。敲一次就好，而这一次能把上面三处问题全部暴露出来。
+// 【第 ③ 段 JSON vs structuredClone 循环引用】⚠️ 只算完成一半
+//   崩溃修好了（把 JSON 那行注释掉），脚本能跑到底，structuredClone 正常处理循环引用：
+//     structuredClone深拷贝的： <ref *1> { address: [Circular *1] }
+//     （`<ref *1>` / `[Circular *1]` 是 Node 打印循环结构的方式，说明克隆成功）
+//   ⚠️ 但这样一来**对比就消失了**：JSON 那半被注释掉，只剩 structuredClone 一行输出。
+//      这一段的目的是"亲眼看到 JSON 方式会抛错，而 structuredClone 不会"——现在只证明了后半句。
+//      修法：把注释取消，用 try/catch 把错误接住打印出来。
+//      try/catch 你在 day02-scope.js 里已经写过了，直接搬过来即可。
+//      期望看到：TypeError: Converting circular structure to JSON
+//                 --> starting at object with constructor 'Object'
+//                 --- property 'address' closes the circle
 // ============================================================
 
 
@@ -60,6 +54,10 @@ console.log('原数组：',arr);
 const spliced=arr.toSpliced(1,1,1);
 console.log('新数组：',spliced);
 console.log('原数组：',arr);
+const sort=arr.sort();
+console.log('新数组：',sort);
+console.log('原数组：',arr);
+
 
 
 //今天写一组三连对比（这是深浅拷贝最锋利的一刀）：
@@ -69,10 +67,15 @@ console.log("①拷贝前的原对象：",nested.address);
 const shallow = {...nested};
 shallow.address.city = 'LA';
 console.log("①拷贝后的原对象：",nested.address);
-const deep=structuredClone(nested);
-deep.address.city='ch';
-console.log('深拷贝的对象：',deep.address);
-console.log("②深拷贝后的原对象：",nested.address);
+
+const nested1 ={name:"John",address :{city:"NY"}};
+const deep=structuredClone(nested1);
+console.log("②深拷贝后的原对象：",nested1.address);
+console.log('深拷贝修改前的对象：',deep.address);
+deep.address.city='LA';
+console.log("②深拷贝后的原对象：",nested1.address);
+console.log('深拷贝修改后的对象：',deep.address);
+
 
 
 // 再加一条：JSON.parse(JSON.stringify(x))
@@ -80,10 +83,10 @@ console.log("②深拷贝后的原对象：",nested.address);
 // structuredClone 能正常处理 —— 昨天我实测过，可以自己复现。
 const a={};
 a.address=a;
-const Json=JSON.parse(JSON.stringify(a));
+//const Json=JSON.parse(JSON.stringify(a));
 const clone=structuredClone(a);
 console.log ('structuredClone深拷贝的：',clone);
-console.log ('Jspm深拷贝的：',Json);
+//console.log ('Jspm深拷贝的：',Json);
 
 
 
