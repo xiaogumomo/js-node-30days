@@ -15,21 +15,27 @@
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// 两个失败分支都要给出同样的排查提示：你第一次运行时，
+// day02-debounce.js 很可能"文件存在但内容全是注释"，会先撞上第二个分支。
+function hintAndExit(why) {
+  console.log('❌ ' + why);
+  console.log('');
+  console.log('检查这三件事：');
+  console.log('  1. week1-language/day02-debounce.js 里的代码是不是还在注释里？（// 或 /* */ 包着）');
+  console.log('  2. 文件最后有没有加一行 module.exports = { debounce };');
+  console.log('  3. 函数名是不是就叫 debounce（大小写一致）？');
+  process.exit(1);
+}
+
 let debounce;
 try {
   ({ debounce } = require('./day02-debounce.js'));
 } catch (err) {
-  console.log('❌ 读不到你的实现。错误信息：' + err.message);
-  console.log('');
-  console.log('检查这三件事：');
-  console.log('  1. week1-language/day02-debounce.js 里的代码是不是还在注释里？');
-  console.log('  2. 文件最后有没有加 module.exports = { debounce };');
-  console.log('  3. 函数名是不是就叫 debounce？');
-  process.exit(1);
+  hintAndExit('读不到 day02-debounce.js。错误信息：' + err.message);
 }
 if (typeof debounce !== 'function') {
-  console.log('❌ 读到了，但 debounce 不是函数，它现在是：' + typeof debounce);
-  process.exit(1);
+  hintAndExit('文件读到了，但导出的 debounce 不是函数，它现在是：' + typeof debounce
+    + '（多半是模块导出还没写，或者代码还注释着）');
 }
 
 let pass = 0;
