@@ -14,7 +14,10 @@
 //     （leading + trailing）。实测：调用后执行 1 次，等 delay 过去后又执行
 //     1 次，共 2 次。这不是 bug，是设计选择（lodash 用 leading / trailing
 //     两个选项控制）。
-//     TODO(你补一句话)：我的 immediate 语义是 ______，因为 ______。
+//     TODO(你补一句话)：我的 immediate 语义是 immediate: true 语义 = 【leading + trailing】：调用当刻执行一次，
+//     delay 之后再执行一次，共 2 次。
+//     因为开头先调用boolean给immediate确认整个函数的模式，末尾if语句判断immediate模式分支执行命令。
+// 
 //   · 【设计局限，不是实现错误】普通（trailing）模式下 return result 永远是
 //     undefined —— 此刻函数还没执行，result 还是空的。这是防抖本身的
 //     时间冲突，面试时能主动讲清是加分项。
@@ -33,7 +36,7 @@ return function(...arg) {
     clearTimeout(timer);
 }
 
-if(immediate){
+if(immediate){//immediate；true 调用的第一次
     let callNow=!timer;
     timer=setTimeout(()=>{timer=null},delay);
     if(callNow){
@@ -41,10 +44,12 @@ if(immediate){
     }
     
 }
-timer=setTimeout(()=>{result=fn.apply(this,arg);},delay);
+timer=setTimeout(()=>{result=fn.apply(this,arg);},delay);//immediate : true 调用的第二次 无条件进行
 
 return result;
 }
 }
 
 module.exports = { debounce };
+
+
