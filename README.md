@@ -8,7 +8,7 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-12，32 天）
 
 | 周次 | 日期 | 主题 | 状态 |
 |---|---|---|---|
-| 第 1 周 | 9/11–9/17 | JavaScript 语言核心 + TypeScript 基础 | 🔄 进行中（Day 1 ✅） |
+| 第 1 周 | 9/11–9/18 | JavaScript 语言核心 + TypeScript 基础 | 🔄 进行中（Day 4 已全绿，Day 5 进行中） |
 | 第 2 周 | 9/18–9/24 | Node.js 运行时 + 异步与流 + 工程化 | ⬜ |
 | 第 3 周 | 9/25–10/1 | 后端服务 + 数据库 + 测试 + 部署 | ⬜ |
 | 第 4 周 | 10/2–10/8 | AI 应用开发（RAG） | ⬜ |
@@ -22,6 +22,7 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-12，32 天）
 | 2 | 9/12 | 函数与作用域 | [日志](notes/day02.md) · [学习指引](notes/day02-functions.md) · [练习记录](week1-language/day02-functions-practice.js) | ⚠️ 约 30%，阅读欠账已在 Day 3 清掉 |
 | 3 | 9/13 | 补 Day 2 + 数组与对象 | [日志](notes/day03.md) · [学习指引](notes/day03-arrays.md) · [作用域练习](week1-language/day02-scope.js) · [数组方法](week1-language/day03-array-methods.js) · [浅拷贝](week1-language/day02-clone.js) · [数组浅拷贝](week1-language/day02-clone-array.js) | ⚠️ 约 52%，四个裸写函数转入 Day 4–5 |
 | 4 | 9/14 | 定时器 + 装饰器 + 裸写 debounce + 深克隆 | [日志](notes/day04.md) · [学习指引](notes/day04-timers.md) · [debounce 脚手架](week1-language/day04-debounce-verify.js) · [深克隆脚手架](week1-language/day04-clone-verify.js) · [浅拷贝+深克隆](week1-language/day02-clone.js) · [递归章练习](week1-language/day04-clone-practice.js) | ✅ 全绿（debounce 6/6、数组 7/8 项、深克隆 17/17） |
+| 5 | 9/15 | 剩下两个函数 + `p0-toolkit` 立项 | [日志](notes/day05.md) · [任务书](notes/day05-guide.md) · [throttle 脚手架](week1-language/day05-throttle-verify.js) · [curry 脚手架](week1-language/day05-curry-verify.js) | 🔄 进行中 |
 
 ## 项目
 
@@ -61,3 +62,8 @@ notes/dayNN-mistakes.md  每日错题本（逐题记录 + 错因聚类 + 复练�
     [debounce 验证脚手架](week1-language/day04-debounce-verify.js)（6/6 通过）、
     [深克隆验证脚手架](week1-language/day04-clone-verify.js)（17/17 通过 + 2 个局限探针）
   - 当日产出：[浅拷贝三种写法 + 手写深克隆](week1-language/day02-clone.js)、[递归章练习](week1-language/day04-clone-practice.js)
+- [Day 5 — 2026-09-15](notes/day05.md) —— 剩下两个函数 + `p0-toolkit` 立项（进行中）
+  - 任务书：[Day 5 任务书：throttle + curry + p0-toolkit 立项](notes/day05-guide.md)
+  - 验证脚手架：[throttle](week1-language/day05-throttle-verify.js)（5 项 + 1 个 leading/trailing 探针）、
+    [curry](week1-language/day05-curry-verify.js)（12 项 + 1 个 `fn.length` 陷阱探针）
+  - 目标产出：[`week1-language/p0-toolkit/`](week1-language/) —— 第 1 周的第一个真实产出物，测试用 Node 内置的 `node --test`（零依赖，Vitest 排在 Day 8）
