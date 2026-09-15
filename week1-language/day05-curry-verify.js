@@ -22,6 +22,7 @@ function hintAndExit(why) {
   console.log('  1. week1-language/day02-curry.js 里有没有一个叫 curry 的函数？');
   console.log('  2. 文件最后有没有加一行 module.exports = { curry };');
   console.log('  3. 你写的代码是不是还在注释里（// 或 /* */ 包着）？');
+  console.log('  4. 文件语法对不对？单独敲一次：node --check week1-language/day02-curry.js');
   process.exit(1);
 }
 
@@ -29,6 +30,12 @@ let curry;
 try {
   ({ curry } = require('./day02-curry.js'));
 } catch (err) {
+  if (err instanceof SyntaxError) {
+    hintAndExit('day02-curry.js 有【语法错误】，整个文件都没法被加载进来。\n'
+      + '   原始错误：' + err.message
+      + '\n   → 先单独检查语法：node --check week1-language/day02-curry.js'
+      + '\n     （它会直接告诉你第几行、哪个字符出错）');
+  }
   hintAndExit('读不到 day02-curry.js。错误信息：' + err.message);
 }
 if (typeof curry !== 'function') {
