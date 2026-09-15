@@ -1,0 +1,9 @@
+{
+  "name": "p0-toolkit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "30 天计划第 1 周的工具函数库（JS 版，Day 8 转 TS）",
+  "scripts": {
+    "test": "node --test"
+  }
+}
