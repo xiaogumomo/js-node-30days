@@ -22,7 +22,8 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-12，32 天）
 | 2 | 9/12 | 函数与作用域 | [日志](notes/day02.md) · [学习指引](notes/day02-functions.md) · [练习记录](week1-language/day02-functions-practice.js) | ⚠️ 约 30%，阅读欠账已在 Day 3 清掉 |
 | 3 | 9/13 | 补 Day 2 + 数组与对象 | [日志](notes/day03.md) · [学习指引](notes/day03-arrays.md) · [作用域练习](week1-language/day02-scope.js) · [数组方法](week1-language/day03-array-methods.js) · [浅拷贝](week1-language/day02-clone.js) · [数组浅拷贝](week1-language/day02-clone-array.js) | ⚠️ 约 52%，四个裸写函数转入 Day 4–5 |
 | 4 | 9/14 | 定时器 + 装饰器 + 裸写 debounce + 深克隆 | [日志](notes/day04.md) · [学习指引](notes/day04-timers.md) · [debounce 脚手架](week1-language/day04-debounce-verify.js) · [深克隆脚手架](week1-language/day04-clone-verify.js) · [浅拷贝+深克隆](week1-language/day02-clone.js) · [递归章练习](week1-language/day04-clone-practice.js) | ✅ 全绿（debounce 6/6、数组 7/8 项、深克隆 17/17） |
-| 5 | 9/15 | 剩下两个函数 + `p0-toolkit` 立项 | [日志](notes/day05.md) · [任务书](notes/day05-guide.md) · [手机版](notes/day05-phone.md) · [throttle 脚手架](week1-language/day05-throttle-verify.js) · [curry 脚手架](week1-language/day05-curry-verify.js) | 🔄 进行中 |
+| 5 | 9/15 | 剩下两个函数 + `p0-toolkit` 立项 | [日志](notes/day05.md) · [任务书](notes/day05-guide.md) · [手机版](notes/day05-phone.md) · [throttle 脚手架](week1-language/day05-throttle-verify.js) · [curry 脚手架](week1-language/day05-curry-verify.js) | ✅ 全绿（throttle 5/5、curry 12/12、工具箱 17/17） |
+| 6 | 9/16 | `this` / 原型链 / `class` + 数组 polyfill | [日志](notes/day06.md) · [任务书](notes/day06-this-prototype.md) · [array polyfill 脚手架](week1-language/day06-array-utils-verify.js) | 🔄 进行中 |
 
 ## 项目
 
