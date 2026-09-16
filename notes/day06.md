@@ -1,4 +1,4 @@
-# Day 6 — 2026-09-16（周三）
+# Day 6 — 2026-09-17（周四）
 
 > **状态：待填写**　｜　任务书：[`day06-this-prototype.md`](day06-this-prototype.md)
 > 主题：**`this` / 原型链 / `class`** + 数组三个方法的 polyfill
