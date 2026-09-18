@@ -1,14 +1,16 @@
 # js-node-30days
 
-JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-12，32 天）
+JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-14，32 个学习日）
 
-> **日程已重排 2 次**（详见 `js-node-30day-plan.md` §四「进度看板与再计划机制」）。最近一次在 Day 3 结束时：补入两个缺失的前置章节（`setTimeout` 调度、装饰器与 call/apply），四个裸写函数拆成两天，结束日 10/11 → **10/12**。
+> **日程已顺延 4 次**（详见 `js-node-30day-plan.md` §四「进度看板与再计划机制」），结束日 10/11 → 10/12 → 10/13 → **10/14**。原因包括前置章节缺失、以及 9/16 休息、9/18 停摆各 1 天。
+>
+> ⚠️ **计划里已写明：剩余内容 26.5 个内容日 vs 剩余日历 26 天，缺口 0.5 天**；如果保持现有负载，结束日会落到 11 月上旬。要么继续顺延（A），要么现在砍内容把结束日锁在 10/14（B）——**这是需要人来定的取舍**，见计划 §四「第四次调整」。
 
 ## 进度
 
 | 周次 | 日期 | 主题 | 状态 |
 |---|---|---|---|
-| 第 1 周 | 9/11–9/19 | JavaScript 语言核心 + TypeScript 基础 | 🔄 进行中（Day 5 已全绿；9/16 休息，Day 6 顺延到 9/17） |
+| 第 1 周 | 9/11–9/20 | JavaScript 语言核心 + TypeScript 基础 | 🔄 进行中（Day 5 全绿；9/16 休息、9/18 停摆，Day 7 顺延到 9/19） |
 | 第 2 周 | 9/18–9/24 | Node.js 运行时 + 异步与流 + 工程化 | ⬜ |
 | 第 3 周 | 9/25–10/1 | 后端服务 + 数据库 + 测试 + 部署 | ⬜ |
 | 第 4 周 | 10/2–10/8 | AI 应用开发（RAG） | ⬜ |
@@ -23,7 +25,8 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-12，32 天）
 | 3 | 9/13 | 补 Day 2 + 数组与对象 | [日志](notes/day03.md) · [学习指引](notes/day03-arrays.md) · [作用域练习](week1-language/day02-scope.js) · [数组方法](week1-language/day03-array-methods.js) · [浅拷贝](week1-language/day02-clone.js) · [数组浅拷贝](week1-language/day02-clone-array.js) | ⚠️ 约 52%，四个裸写函数转入 Day 4–5 |
 | 4 | 9/14 | 定时器 + 装饰器 + 裸写 debounce + 深克隆 | [日志](notes/day04.md) · [学习指引](notes/day04-timers.md) · [debounce 脚手架](week1-language/day04-debounce-verify.js) · [深克隆脚手架](week1-language/day04-clone-verify.js) · [浅拷贝+深克隆](week1-language/day02-clone.js) · [递归章练习](week1-language/day04-clone-practice.js) | ✅ 全绿（debounce 6/6、数组 7/8 项、深克隆 17/17） |
 | 5 | 9/15 | 剩下两个函数 + `p0-toolkit` 立项 | [日志](notes/day05.md) · [任务书](notes/day05-guide.md) · [手机版](notes/day05-phone.md) · [throttle 脚手架](week1-language/day05-throttle-verify.js) · [curry 脚手架](week1-language/day05-curry-verify.js) | ✅ 全绿（throttle 5/5、curry 12/12、工具箱 17/17） |
-| 6 | 9/17 | `this` / 原型链 / `class` + 数组 polyfill | [日志](notes/day06.md) · [任务书](notes/day06-this-prototype.md) · [array polyfill 脚手架](week1-language/day06-array-utils-verify.js) | 🔄 进行中 |
+| 6 | 9/17 | `this` / 原型链 / `class` + 数组 polyfill | [日志](notes/day06.md) · [任务书](notes/day06-this-prototype.md) · [this 演示](week1-language/day06-this.js) · [原型练习](week1-language/day06-prototype.js) · [array polyfill 脚手架](week1-language/day06-array-utils-verify.js) | ⚠️ 约 50%（`this` 完成；原型只做了一半且有语法错误；polyfill 未开始） |
+| — | 9/18 | ⚫ **停摆（有事）** | —— | ⚫ 整天未开工 |
 
 ## 项目
 
