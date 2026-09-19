@@ -4,3 +4,7 @@ node_modules/
 dist/
 coverage/
 .DS_Store
+
+# AI 交接文档（含学习者画像/薄弱点，仓库是公开的，故不入库；
+# 如需公开这份记录：git add -f notes/HANDOFF.md）
+notes/HANDOFF.md
