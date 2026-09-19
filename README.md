@@ -27,7 +27,7 @@ JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-14，32 个学�
 | 5 | 9/15 | 剩下两个函数 + `p0-toolkit` 立项 | [日志](notes/day05.md) · [任务书](notes/day05-guide.md) · [手机版](notes/day05-phone.md) · [throttle 脚手架](week1-language/day05-throttle-verify.js) · [curry 脚手架](week1-language/day05-curry-verify.js) | ✅ 全绿（throttle 5/5、curry 12/12、工具箱 17/17） |
 | 6 | 9/17 | `this` / 原型链 / `class` + 数组 polyfill | [日志](notes/day06.md) · [任务书](notes/day06-this-prototype.md) · [this 演示](week1-language/day06-this.js) · [原型练习](week1-language/day06-prototype.js) · [array polyfill 脚手架](week1-language/day06-array-utils-verify.js) | ⚠️ 约 50%（`this` 完成；原型只做了一半且有语法错误；polyfill 未开始） |
 | — | 9/18 | ⚫ **停摆（有事）** | —— | ⚫ 整天未开工 |
-| 7 | 9/19 | 清 Day 6 欠账 + Promise 前半 | [日志](notes/day07.md) · [任务书](notes/day07-async.md) | 🔄 进行中（今天按 3~4 小时排，不追求做完 Day 7） |
+| 7 | 9/19–9/20 | 清 Day 6 欠账 + Promise 前半 | [日志](notes/day07.md) · [任务书](notes/day07-async.md) | ⚠️ **跨两天**：9/19 Day 6 欠账全清 + polyfill 17/17；9/20 继续 |
 
 ## 项目
 

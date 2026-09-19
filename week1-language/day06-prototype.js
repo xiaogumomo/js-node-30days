@@ -53,7 +53,7 @@ class Rabbit extends Animal{
     constructor(name,earlength){
     this.speed = 0;
     this.name = name;
-    this.earlength = earLength ;
+    this.earlength = earlength ;
     }
     
 } 
@@ -134,7 +134,7 @@ console.log(rabbit.eats);
   }
   Rabbit.prototype=Object.create(Animal.prototype);//将Animal与Rabbit通过[[prototype]]属性链接
   const rabbit = new Rabbit();//新建实例对象
-  Rabbit.prototype.eats();
+  rabbit.eats();
   
 }
 
@@ -144,10 +144,8 @@ console.log(rabbit.eats);
 // 3) Derived 字段初始化        ← 必须等 super() 返回，因为在那之前 this 还不存在
 // 4) Derived 构造函数体（super 之后）
 {//1.
-    class Base{
-        constructor(){
-            console.log("1.Base 字段初始化")
-        }
+    class Base{  
+        baseField = console.log("1.Base 字段初始化");  
     }
    const base = new Base();
 
@@ -155,13 +153,13 @@ console.log(rabbit.eats);
 
 {//2.
    class Base{
-    run(){
+    constructor(){
     console.log("2. Base 构造函数体");
     }
-   }
-   const base = new Base();
-   base.run();
+    }
+    new Base();
 }
+
 {//3.
       class Base{
         constructor(name){
@@ -194,7 +192,8 @@ console.log(rabbit.eats);
 
 //① 把子类的 derivedField 那行删掉 → 输出剩 3 行（第 3 行消失）
 
-//② 把子类的整个 constructor 删掉 → 还是 4 行！因为会自动生成 constructor(...args) { super(...args); } —— 这正是你昨天写对的那条（"子类没有 constructor 时会自动调用 super"）✓
+///② 把子类的整个 constructor 删掉 → 只剩 3 行（第 4 行本来就是构造函数体打印的）
+//   但【参数仍然到了父类】—— 这才是"自动生成的 constructor 会转发参数"的证据
 
 //③ 在子类构造函数里、super() 之前写 this.x = 1 → 抛错：
 
@@ -233,12 +232,7 @@ new Derived();
 
 class Derived extends Base {                       // 子类
   derivedField = console.log('3) 子类的字段初始化');
-
-  
-                                              // 必须调，否则下面不能用 this
-  derivedfield= console.log('4) 子类的构造函数体 （uper 之后）');
   }
-
 new Derived();
 }
 
@@ -284,25 +278,31 @@ new Derived();
 {
 try {
 
-    class Derived  extends Base{ 
-        constructor(){
-            derivedField=console.log( "1.子类构造函数体：第一行（super 之前）"+this.name);
-            super();
-        
-        }
 
-    }
+
+    
     class Base{
         basedField=console.log("2.父类构造函数体");
 
     }
-    class Deriveds  extends Base{ 
-    derivedField = console.log("3.子类字段初始化");
+    class Derived  extends Base{ 
+        derivedField = console.log("3.子类字段初始化");
+        constructor(){
+            console.log( "1.子类构造函数体：第一行（super 之前）");
+            super();
+        }
     }
-   
 
 
-}catch(error){
+    class Deriveds  extends Base{ 
+    
+    }
+
+    new Derived();
+
+}
+
+catch(error){
     console.log(error.name);
     console.log(error.message);
     console.log(error.stack);
