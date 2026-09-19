@@ -80,10 +80,11 @@ let arr=value.split(" ");在访问器代码中的例子中出现看不懂（访�
 4.class章节中提到 F.prototype 但我没有接触到
 5.class章节中提到 构造器和操作符 "new"但我没有接触到
 6.Getters/setters仅仅在class章节提到但是没有详细讲
-7.
+7.深入：内部探究和 [[HomeObject]]（类继承中这部分没有学）
+
 ## 学会了什么
 
-**1.（我写的）** 箭头函数的 this 看定义位置，在哪就是哪，在函数里也是全局对象 globalThise；普通函数的 this 看调用方而决定的隐藏属性，由对象就看对象属性，由函数就看函数属性，由 apply、call 就看他们后面的对象，bind 看后面对象。
+**1.（我写的）** 箭头函数的 this 看定义位置，在哪就是哪，在函数里指向的是模块顶层也是全局对象 globalThis，值为undefined；普通函数的 this 看调用方而决定的隐藏属性，由对象就看对象属性，由函数就看函数属性，由 apply、call 就看他们后面的对象，bind 看后面对象。
 
 > **核对：主体完全正确，只有一处要改。**
 >
@@ -96,11 +97,19 @@ let arr=value.split(" ");在访问器代码中的例子中出现看不懂（访�
 >
 > 所以"定位"是对的，"定到哪个值"要按这张表来。**只有普通函数被普通调用时，this 才是 globalThis。**
 >
+> **9/19 复查（第二次修订仍写成 globalThis）**：实测 `顶层 this === module.exports` 是 **true**、`=== globalThis` 是 **false**，而 `module.exports` 就是个空对象 `{}`。两者都"没有 name 属性"所以结果都是 `undefined`，**但身份完全不同**——面试问"模块顶层的 this 是什么"，答 `globalThis` 是错的。
+>
 > 其余部分全对，尤其是把 `apply`/`call`/`bind` 归到"看后面那个对象"——方向和精度都对 ✓
 
-**2.（待补）**
+**2.类继承的相关关键字，extends关键字，核心在原型为其添加新的功能，super关键字调用父辈（指原型）的方法，比如原型中有stop();方法，super.stop();来调用方法(箭头函数没有super，箭头函数没有this，this是指向当前模块顶层)，extends如果要重写constructor，必须加super(父辈初始化的部分)，否则禁止使用this（会报错）
+如果就是super();呢？会输出undefined因为括号内为空，为undefined。子类没有constructor时，会自动调用super(..arg)而不是没有
 
-**3.（待补）**
+
+
+**3.[[prototype]]是对象中的隐藏属性，可以通过Object.getprototypeof();子辈与实例对象寻找父辈的链接是[[prototype]]的作用，与例子中Animal.prototype不一样，一个是子辈与实例对象的链接父辈的隐藏属性，一个（.prototype）是随着Animal函数对象一起创造出来“方法仓库”作用是用于给予子辈提供方法的（子辈共用一种方法，而不是各用不同的复制副本）
+4. '.prototype'是同animal函数由javascript创造出来的对象，作用是提供其子辈使用的方法，是作为其他对象原型的“对象”；里面的constructor属性不同于costructor方法，一个是指向animal类本身的引用，作用是告诉别人这个constructor的归属，在函数里作为函数形式出现的作用是初始化实例对象，如果不写，javascript系统会自动生成代码：constructor(...arg){
+  super(...arg)
+}
 
 
 ## 卡在哪里
@@ -162,11 +171,11 @@ console.log( lazy.stomach );
 ## 欠账登记（按计划 §四 的规则）
 | 欠什么 | 补在哪天 |
 |---|---|
-| **手写原型继承 + `class` 重写对比**（产出物 2 的核心要求：两边跑出同样结果） | 9/18（Day 7）上午 |
-| `day06-prototype.js` 的语法错误（`this speed = 0` 等）+ 字段初始化顺序 4 步演示 | 9/18（Day 7）上午 |
-| `myMap` / `myFilter` / `myReduce` 裸写 + 跑脚手架 17/17（产出物 3） | 9/18（Day 7） |
-| `p0-toolkit/src/arrayUtils.js` + `test/arrayUtils.test.js`（产出物 4） | 9/18（Day 7） |
-| 「学会了什么」的第 2、3 条 | 9/18（Day 7）上午 |
+| **手写原型继承 + `class` 重写对比**（产出物 2 的核心要求：两边跑出同样结果） | 9/19（Day 7）上午 |
+| `day06-prototype.js` 的语法错误（`this speed = 0` 等）+ 字段初始化顺序 4 步演示 | 9/19（Day 7）上午 |
+| `myMap` / `myFilter` / `myReduce` 裸写 + 跑脚手架 17/17（产出物 3） | 9/19（Day 7） |
+| `p0-toolkit/src/arrayUtils.js` + `test/arrayUtils.test.js`（产出物 4） | 9/19（Day 7） |
+| ~~「学会了什么」的第 2、3 条~~ | ✅ 已完成（9/19） |
 
 合计约 **0.5 天**（Day 5 的 0.5 天已于今天上午清掉）。**仍不足 1 天，按规则不动结束日**；但下一个 0.5 天到来时就到阈值了。
 
@@ -193,6 +202,7 @@ git status -sb   # 没有 ahead 就同步好了
 
 ## 10:10 检查点（今天的实际走向）
 时间不够时该压的是插件阅读、保住 polyfill 的裸写时段 —— **但今天连 polyfill 都没开始**，这条检查点没起到作用，明天的检查点要真的照做。
+
 ---
 
 ## AI 复核
