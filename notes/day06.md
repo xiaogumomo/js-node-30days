@@ -81,6 +81,8 @@ let arr=value.split(" ");在访问器代码中的例子中出现看不懂（访�
 5.class章节中提到 构造器和操作符 "new"但我没有接触到
 6.Getters/setters仅仅在class章节提到但是没有详细讲
 7.深入：内部探究和 [[HomeObject]]（类继承中这部分没有学）
+8.`Object.create`（手写继承那五步里用到了，但我没学过）—— 核实结果：**《原型，继承》章里没有它**；它出现在《原型方法，没有 __proto__ 的对象》那一章（本周书单外），**第 2 周补**。用法已记录在 9/19 的聊天里：`Object.create(proto)` = 造一个新对象并把它的 `[[Prototype]]` 指向 `proto`。
+9.为什么 `Rabbit.prototype = Animal.prototype` 不行、必须用 `Object.create`？（提示：直接赋值会让子类和父类**共用同一个原型对象**，往子类原型上挂方法会**污染父类**）
 
 ## 学会了什么
 
