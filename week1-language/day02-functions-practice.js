@@ -201,7 +201,7 @@ main();
 //setTimeout(()=>{},time );
 
 
-/* function buyfood(){
+function buyfood(){
     return new Promise
     (resolve=>
     {
@@ -221,7 +221,7 @@ async function eat(){
 
 }
 eat();
- */
+
 
 
 // function showMessage(){
