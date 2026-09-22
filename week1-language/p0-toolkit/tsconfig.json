@@ -1,0 +1,15 @@
+
+
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "nodenext",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "test/throttle.test.ts", "test/deepClone.test.ts", "test/curry.test.ts", "test/arrayUtils.test.js", "src/throttle.ts", "src/deepClone.ts", "src/debounce.ts", "src/arrayUtils.ts"]
+}

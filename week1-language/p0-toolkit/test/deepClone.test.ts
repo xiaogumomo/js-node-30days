@@ -10,7 +10,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { deepClone } = require('../src/deepClone.js');
+const { deepClone } = require('../src/deepClone.ts');
 
 test('嵌套对象：改副本的深层属性，原对象不受影响', () => {
   const src = { name: 'John', address: { city: 'NY' } };
@@ -22,7 +22,7 @@ test('嵌套对象：改副本的深层属性，原对象不受影响', () => {
 });
 
 test('数组（含嵌套数组、数组里的对象）', () => {
-  const src = [1, [2, 3], { a: 1 }];
+  const src: any[]= [1, [2, 3], { a: 1 }];
   const copy = deepClone(src);
   assert.ok(Array.isArray(copy));              // ok() 就是"断言它是真值"
   assert.notEqual(copy[1], src[1]);

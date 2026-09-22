@@ -51,12 +51,12 @@ if (require.main === module) {
 
   //for...in
 
-  let user2 = {
+  let user2 : Record<string,any>= {
     name: 'John',
     address: { city: 'NL' }
   }
-  let clone2 = {};
-  for (let key in user2) {
+  let clone2 :Record<string,any>={};
+  for (const key in user2) {
     clone2[key] = user2[key]
   }
   console.log("克隆后修改前的原对象：", user2);
@@ -85,7 +85,7 @@ if (require.main === module) {
 //   · 函数和 undefined 属性 → 被**静默丢弃**（不报错，属性凭空消失）
 
 
-function deepClone(x) {
+function deepClone(x:any):any {
 
     if (typeof x !== 'object' || x === null) {
         return x;
@@ -93,7 +93,7 @@ function deepClone(x) {
     if (Array.isArray(x)) {
         return x.map(item => deepClone(item));
     }
-    let result = {}
+    let result:Record<string,any>={}
     for (const key in x) {
         result[key] = deepClone(x[key]);
     }

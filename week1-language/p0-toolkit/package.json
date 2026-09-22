@@ -4,6 +4,11 @@
   "private": true,
   "description": "30 天计划第 1 周的工具函数库（JS 版，Day 8 转 TS）",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^7.0.2"
   }
 }

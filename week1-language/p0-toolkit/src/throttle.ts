@@ -13,10 +13,10 @@
 //路线A
 
 
-function throttle(fn, interval){
+function throttle(fn:(...arg:any[])=>any, interval:number){
     let last =0;
     let now = 0;
-    return function(...args){
+    return function(this:unknown,...args:any){
 
     now = Date.now();
      if(now-last>=interval){
@@ -30,9 +30,9 @@ function throttle(fn, interval){
 //路线B
 
 
-function throttleBySwitch(fn, interval){
+function throttleBySwitch(this:unknown,fn:(...arg:any[])=>any, interval:number){
    let waiting = true ;
-    return function(...args){
+    return function(this:unknown,...args:any){
      if(waiting){
         waiting =false;
         setTimeout(()=>{waiting=true;},interval);

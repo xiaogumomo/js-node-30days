@@ -42,18 +42,44 @@ const ROTATION = [
 function listModules() {
   if (!fs.existsSync(TEST_DIR)) return [];
   return fs.readdirSync(TEST_DIR)
-    .filter((f) => f.endsWith('.test.js'))
-    .map((f) => f.replace(/\.test\.js$/, ''));
+    .filter((f) => /\.test\.(js|ts)$/.test(f))
+    .map((f) => f.replace(/\.test\.(js|ts)$/, ''));
 }
 
 // 从测试文件的 require 那行里读出"这个模块要导出哪些名字"，给失败提示用
 function expectedExports(moduleName) {
-  const testFile = path.join(TEST_DIR, moduleName + '.test.js');
+  const testFile = ['ts', 'js']
+    .map((ext) => path.join(TEST_DIR, moduleName + '.test.' + ext))
+    .find((f) => fs.existsSync(f));
+  if (!testFile) return null;
   const text = fs.readFileSync(testFile, 'utf8');
-  const re = new RegExp('\\{([^}]*)\\}\\s*=\\s*require\\([^)]*' + moduleName + '\\.js');
+  const re = new RegExp('\\{([^}]*)\\}\\s*=\\s*require\\([^)]*' + moduleName + '\\.(js|ts)');
   const m = re.exec(text);
   if (!m) return null;
   return m[1].split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+// 读他的重写稿"实际导出了什么"（只在有失败时才调用，免得执行顶层代码干扰输出）
+function actualExports(file) {
+  try {
+    const mod = require(file);
+    return Object.keys(mod || {});
+  } catch (e) {
+    return { loadError: e.message };
+  }
+}
+
+// 简易编辑距离：用来判断"是不是拼错了"（2026-09-22 加，起因是 `throttleBySwich` 少一个 t）
+function editDistance(a, b) {
+  const m = a.length, n = b.length;
+  const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+  }
+  return d[m][n];
 }
 
 function rotationHint() {
@@ -74,8 +100,10 @@ function main() {
   const moduleName = process.argv[2];
   if (!moduleName) { rotationHint(); process.exit(0); }
 
-  const testFile = path.join(TEST_DIR, moduleName + '.test.js');
-  if (!fs.existsSync(testFile)) {
+  const testFile = ['ts', 'js']
+    .map((ext) => path.join(TEST_DIR, moduleName + '.test.' + ext))
+    .find((f) => fs.existsSync(f));
+  if (!testFile) {
     console.log('❌ 工具箱里没有 test/' + moduleName + '.test.js，没判据可用。');
     console.log('   可用的模块：' + listModules().join('、'));
     process.exit(1);
@@ -101,18 +129,31 @@ function main() {
     fs.mkdirSync(path.join(tmp, 'src'));
     fs.mkdirSync(path.join(tmp, 'test'));
     for (const f of fs.readdirSync(SRC_DIR)) {
-      if (f === moduleName + '.js') continue;           // 用他的重写稿顶替
       fs.copyFileSync(path.join(SRC_DIR, f), path.join(tmp, 'src', f));
     }
-    fs.copyFileSync(rewriteFile, path.join(tmp, 'src', moduleName + '.js'));
-    fs.copyFileSync(testFile, path.join(tmp, 'test', moduleName + '.test.js'));
+    // 目标文件名 = 测试文件里 require('../src/xxx') 的那个 xxx（工具箱转 TS 后要跟着变）
+    const testText = fs.readFileSync(testFile, 'utf8');
+    const after = testText.split('../src/')[1];
+    const targetName = after ? after.split(/['")]/)[0] : moduleName + '.js';
+    fs.copyFileSync(rewriteFile, path.join(tmp, 'src', targetName));
+    fs.copyFileSync(testFile, path.join(tmp, 'test', path.basename(testFile)));
 
     const r = spawnSync(process.execPath, ['--test'], { cwd: tmp, encoding: 'utf8' });
     const out = (r.stdout || '') + (r.stderr || '');
     const line = (re) => { const m = out.match(re); return m ? m[1] : '?'; };
     const tests = line(/^ℹ tests (\d+)/m), pass = line(/^ℹ pass (\d+)/m), fail = line(/^ℹ fail (\d+)/m);
 
+    // ⚠️ 防"假绿"：测试文件里一条 test() 都没有时，`node --test` 会把整个文件算成 1 条通过的测试。
+    // （2026-09-21 真实踩到过：test/throttle.test.js 整段被注释掉，于是 throttle 拿到了 1/1 的假绿。）
+    const liveTests = (fs.readFileSync(testFile, 'utf8').match(/^\s*test\s*\(/gm) || []).length;
+
     console.log('=== 复习验收：' + moduleName + '（用工具箱 test/' + moduleName + '.test.js 判）===\n');
+    if (liveTests === 0) {
+      console.log('⚠️ 判据是空的：test/' + moduleName + '.test.js 里一条 test() 都没有（被注释掉了？）。');
+      console.log('   "通过 ' + pass + '/' + tests + '" 这个绿不算数 —— 先把那个测试文件修好，再来复习。');
+      process.exitCode = 1;   // 提前 return 会跳过 finally 之后的赋值，所以这里直接设
+      return;
+    }
     console.log('  通过 ' + pass + ' / ' + tests + ' 条，失败 ' + fail + ' 条\n');
 
     if (fail === '0') {
@@ -122,11 +163,38 @@ function main() {
       console.log('下面是没有通过的用例（每条的括号里通常写着"实际得到了什么"）：\n');
       const failing = out.split('\n').filter((l) => /^\s*✖/.test(l));
       failing.slice(0, 12).forEach((l) => console.log('  ' + l.trim()));
+
+      // 把真正的报错行也打出来（只打用例名，看不出是"名字拼错"还是"逻辑错"）
+      const errLines = out.split('\n')
+        .filter((l) => /TypeError|AssertionError|ReferenceError|is not a function|Cannot read/.test(l));
+      if (errLines.length) {
+        console.log('\n报错原文（挑前 3 行）：');
+        errLines.slice(0, 3).forEach((l) => console.log('  ' + l.trim().slice(0, 150)));
+      }
+
       console.log('');
       console.log('【这才是收获的地方】先别急着改代码 —— 打开 p0-toolkit/src/' + moduleName + '.js，');
       console.log('   带着"我哪一行想岔了"的问题读一遍，然后**合上再写一遍**（第二遍才算过）。');
-      const names = expectedExports(moduleName);
-      if (names) console.log('   另外确认导出齐了：' + names.join('、'));
+
+      // 导出名对不上是"手滑"里最常见的一类，直接点名（2026-09-22 加）
+      const want = expectedExports(moduleName);
+      if (want) {
+        const got = actualExports(rewriteFile);
+        if (got && got.loadError) {
+          console.log('   ⚠️ 你的文件加载不了：' + got.loadError + '（先跑 node --check）');
+        } else if (got) {
+          const missing = want.filter((n) => !got.includes(n));
+          if (missing.length) {
+            console.log('   ⚠️ **导出名对不上**：测试要的是 ' + want.join('、') + '；你导出的是 ' + (got.join('、') || '（空）'));
+            missing.forEach((name) => {
+              const near = got.find((g) => g !== name && editDistance(g, name) <= 2);
+              if (near) console.log('      → **疑似拼错**：要 `' + name + '`，你写的是 `' + near + '`（差 ' + editDistance(near, name) + ' 个字符）');
+            });
+          } else {
+            console.log('   （导出名齐了：' + want.join('、') + ' —— 所以问题在函数体里）');
+          }
+        }
+      }
     }
     console.log('\n（临时目录已清理，仓库里没有被改动）');
     exitCode = fail === '0' ? 0 : 1;

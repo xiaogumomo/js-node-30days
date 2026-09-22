@@ -12,9 +12,9 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { curry } = require('../src/curry.js');
+const { curry } = require('../src/curry.ts');
 
-const add3 = (a, b, c) => a + b + c;
+const add3 = (a:number, b:number, c:number) => a + b + c;
 
 test('逐个传参：c(1)(2)(3) 得到 6', () => {
   assert.equal(curry(add3)(1)(2)(3), 6);
@@ -44,7 +44,7 @@ test('柯里化后的函数能复用，不串参数（最值钱的一条）', ()
 
 test('两个柯里化函数之间互不干扰', () => {
   const c1 = curry(add3);
-  const c2 = curry((a, b, c) => a * b * c);
+  const c2 = curry((a:number, b:number, c:number) => a * b * c);
   assert.equal(c2(2)(3)(4), 24);
   assert.equal(c1(1)(2)(3), 6);
 });

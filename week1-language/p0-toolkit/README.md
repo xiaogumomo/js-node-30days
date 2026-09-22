@@ -57,5 +57,6 @@ node --test
 
 ## 后续计划
 
-- **Day 8**：整体转 TypeScript，开启 `strict: true`；测试从 `node --test` 换成 Vitest
+- **Day 8**：整体转 TypeScript，开启 `strict: true`
+  - ⚠️ **2026-09-22 实测修正**：**不改测试跑器**。Node 24 自带类型剥离（`node 文件.ts` 直接能跑），`node --test` 也会自动发现 `*.test.ts` → 把 `require('../src/x.js')` 改成 `require('../src/x.ts')` 就能继续用。**Vitest 挪到第 3 周**（项目 2 时再上）。类型检查用 `pnpm add -D typescript` + `pnpm exec tsc --noEmit`。
 - 继续补充：字符串 / 日期 / 数组工具函数

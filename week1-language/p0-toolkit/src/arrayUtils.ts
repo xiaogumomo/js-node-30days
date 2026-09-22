@@ -1,7 +1,7 @@
 
 
 
-function myMap(arr,fn){
+function myMap(arr:number[],fn:(...arg:any[])=>any){
     let out = [];
     for(let i = 0 ; i<arr.length;i++){
         out.push (fn(arr[i],i,arr));
@@ -11,9 +11,9 @@ function myMap(arr,fn){
 
 
 
-    function myFilter(arr,fn){
-      let out = [];
-      for(let i=0 ; i < arr.length ; i++){
+    function myFilter(arr:number[],fn:(...arg:any[])=>any){
+      let out :number[]=[];
+      for(let i:number=0 ; i < arr.length ; i++){
            if( fn(arr[i],i,arr)){
                 out.push(arr[i]);
            }
@@ -23,7 +23,7 @@ function myMap(arr,fn){
     }
 
 
-    function myReduce(arr,fn,init){
+    function myReduce(arr:number[],fn:(...arg:any[])=>any,init:number){
 
         let acc = init ;
         let start = 0 ;

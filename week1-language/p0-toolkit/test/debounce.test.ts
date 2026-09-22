@@ -19,10 +19,10 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { debounce } = require('../src/debounce.js');
+const { debounce } = require('../src/debounce.ts');
 
 // 等 ms 毫秒的工具函数。写一次，各个测试文件都复制这一行。
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms:number) => new Promise((r) => setTimeout(r, ms));
 
 test('连调 5 次只执行 1 次', async () => {
   let calls = 0;                                // 计数器：原函数被执行了几次
@@ -48,4 +48,13 @@ test('immediate: true 第一次立刻执行（这一条不用等）', () => {
   const fn = debounce(() => { calls++; }, 50, true);
   fn();                   // immediate 是"立刻执行"，所以同步断言就是对的
   assert.equal(calls, 1);
+});
+
+test('immediate: true 时，delay 内的第二次调用应被忽略（leading + trailing 语义）', async () => {
+  let calls = 0;
+  const fn = debounce(() => { calls++; }, 80, true);
+  fn(); fn();                       // 连喊两次
+  assert.equal(calls, 1, '第一次立刻执行，delay 内的第二次应该被忽略');
+  await sleep(200);                 // 等过 delay
+  assert.equal(calls, 2, 'delay 结束后应该补一次（leading + trailing）');
 });

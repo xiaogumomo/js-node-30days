@@ -16,27 +16,27 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { myMap, myFilter, myReduce } = require('../src/arrayUtils.js');
+const { myMap, myFilter, myReduce } = require('../src/arrayUtils.ts');
 
 test('myMap：每个元素过一遍回调，返回新数组，原数组不动', () => {
   const src = [1, 2, 3];
-  const out = myMap(src, (x) => x * 2);
+  const out = myMap(src, (x:number) => x * 2);
   assert.deepEqual(out, [2, 4, 6]);
   assert.notEqual(out, src, '返回的应该是新数组，不是原数组本身');
   assert.deepEqual(src, [1, 2, 3], '原数组被改了');
 });
 
 test('myMap：回调收到 (元素, 下标, 原数组)', () => {
-  assert.deepEqual(myMap([10, 20], (el, i) => el + i), [10, 21]);
+  assert.deepEqual(myMap([10, 20], (el:number, i:number) => el + i), [10, 21]);
 
   let third = null;
-  myMap([7], (el, i, arr) => { third = arr; return el; });
+  myMap([7], (el:number, i:number, arr:number) => { third = arr; return el; });
   assert.deepEqual(third, [7], '回调的第三个参数应该是原数组');
 });
 
 test('myFilter：留下回调返回"真"的元素，返回新数组', () => {
   const src = [1, 2, 3, 4];
-  const out = myFilter(src, (x) => x % 2 === 0);
+  const out = myFilter(src, (x:number) => x % 2 === 0);
   assert.deepEqual(out, [2, 4]);
   assert.notEqual(out, src, '返回的应该是新数组');
   assert.deepEqual(src, [1, 2, 3, 4], '原数组被改了');
@@ -45,7 +45,7 @@ test('myFilter：留下回调返回"真"的元素，返回新数组', () => {
 test('myFilter：筛选规则完全由回调决定，不能自己预设元素类型', () => {
   // 这一条防的是"在实现里自作主张加 typeof x === 'number'"那种写法
   const users = [{ n: 'a', age: 20 }, { n: 'b', age: 15 }];
-  const adults = myFilter(users, (u) => u.age >= 18);
+  const adults = myFilter(users, (u:Record<string,any>) => u.age >= 18);
   assert.equal(adults.length, 1);
   assert.equal(adults[0].n, 'a');
   // 回调返回的不是"新元素"而是"要不要"：结果数组里放的必须是原元素本身
@@ -53,15 +53,15 @@ test('myFilter：筛选规则完全由回调决定，不能自己预设元素类
 });
 
 test('myReduce：传了初始值', () => {
-  assert.equal(myReduce([1, 2, 3], (s, x) => s + x, 10), 16);
-  assert.equal(myReduce([], (s, x) => s + x, 0), 0);
+  assert.equal(myReduce([1, 2, 3], (s:number, x:number) => s + x, 10), 16);
+  assert.equal(myReduce([], (s:number, x:number) => s + x, 0), 0);
   const users = [{ age: 20 }, { age: 15 }];
-  assert.equal(myReduce(users, (s, u) => s + u.age, 0), 35);
+  assert.equal(myReduce(users, (s:number, u:Record<string,any>) => s + u.age, 0), 35);
 });
 
 test('myReduce：不传初始值时，起点是第一个元素（回调少跑一次）', () => {
-  assert.equal(myReduce([1, 2, 3], (s, x) => s + x), 6);
-  assert.equal(myReduce(['a', 'b'], (s, x) => s + x), 'ab');
+  assert.equal(myReduce([1, 2, 3], (s:number, x:number) => s + x), 6);
+  assert.equal(myReduce(['a', 'b'], (s:number, x:number) => s + x), 'ab');
 
   let calls = 0;
   const only = myReduce([5], () => { calls++; return 0; });
@@ -70,9 +70,9 @@ test('myReduce：不传初始值时，起点是第一个元素（回调少跑一
 });
 
 test('myReduce：回调收到 (累计值, 元素, 下标, 原数组)', () => {
-  const seen = [];
+  const seen:any[] = [];
   const src = [10, 20];
-  const total = myReduce(src, (acc, el, i, arr) => {
+  const total = myReduce(src, (acc:any, el:any, i:any, arr:any) => {
     seen.push({ acc, el, i, arr });
     return acc + el;
   }, 0);
@@ -86,14 +86,14 @@ test('myReduce：回调收到 (累计值, 元素, 下标, 原数组)', () => {
 test('三个方法都不改原数组（对象数组也一样）', () => {
   const make = () => [{ n: 'a', age: 20 }, { n: 'b', age: 15 }];
   const forMap = make();
-  myMap(forMap, (u) => u.n);
+  myMap(forMap, (u:Record<string,any>) => u.n);
   assert.deepEqual(forMap, [{ n: 'a', age: 20 }, { n: 'b', age: 15 }]);
 
   const forFilter = make();
-  myFilter(forFilter, (u) => u.age >= 18);
+  myFilter(forFilter, (u:Record<string,any>) => u.age >= 18);
   assert.deepEqual(forFilter, [{ n: 'a', age: 20 }, { n: 'b', age: 15 }]);
 
   const forReduce = make();
-  myReduce(forReduce, (s, u) => s + u.age, 0);
+  myReduce(forReduce, (s:any, u:Record<string,any>) => s + u.age, 0);
   assert.deepEqual(forReduce, [{ n: 'a', age: 20 }, { n: 'b', age: 15 }]);
 });

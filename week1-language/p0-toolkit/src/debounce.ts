@@ -28,23 +28,22 @@
 //       "导出的 debounce 不是函数"。
 // ============================================================
 
-function debounce(fn,delay,immediate=false){
-let timer=null;
-let result;
-return function(...arg) {
+function debounce(fn:(...args:any[])=>any,delay:number,immediate=false){
+let timer:ReturnType<typeof setTimeout>|null=null;
+let result:any;
+return function(this:unknown,...arg:any[]) {
     if(timer){
     clearTimeout(timer);
 }
 
 if(immediate){//immediate；true 调用的第一次
     let callNow=!timer;
-    timer=setTimeout(()=>{timer=null},delay);
     if(callNow){
         result=fn.apply(this,arg);
     }
     
 }
-timer=setTimeout(()=>{result=fn.apply(this,arg);},delay);//immediate : true 调用的第二次 无条件进行
+timer=setTimeout(()=>{timer=null;result=fn.apply(this,arg);},delay);//immediate : true 调用的第二次 无条件进行
 
 return result;
 }

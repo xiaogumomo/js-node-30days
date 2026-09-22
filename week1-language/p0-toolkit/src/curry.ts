@@ -8,13 +8,18 @@
 //写之前需要解决的问题
 //怎么收？  fn.apply    或  fn.call
 
-function curry(fn){
+
+
+
+
+
+function curry(fn:(...args:any[])=>any){
     
-    return function  collect(...adj){
+    return function  collect(this:unknown,...adj:any[]){
         if (adj.length >=fn.length){
         return fn.apply(this,adj);
     }
-        return function agcollect(...nextadj){
+        return function agcollect(this:unknown,...nextadj:any[]){
         return collect.apply(this,adj.concat(nextadj));
        }
 
