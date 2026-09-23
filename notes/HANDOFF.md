@@ -167,36 +167,25 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 
 ---
 
-## 六、下一步（9/23 = Day 9：先补 3 项欠账，再做事件循环）
+## 六、下一步（9/24 = Day 10：内置模块）
 
-**材料已经备齐（9/23 开工前就绪）：**
-- 任务书 `notes/day09-eventloop.md`（7 项、含时间表与砍单顺序）
-- 日志模板 `notes/day09.md`（含"预测 vs 实测"表、六阶段表）
-- **`notes/ts-cheatsheet.md`**（TS 类型速查表 —— 直接接住他"类型表示法不知道"那个卡点）
+**开工前要先做两件事**：
+1. **确认推送成功** —— 9/23 收工时 `git status -sb` 显示 **`ahead 2`**（`day08` + `day09` 两个提交还在本地）。`git push` 之后再 `git status -sb` 看还有没有 `ahead`。
+2. **AI 写今天的任务书**：`notes/day10-*.md` + 日志模板 `notes/day10.md`。
+   主题：`fs/promises` / `path` / `os` / `url` / `Buffer` / `process.argv/env` vs `util.parseArgs`
+   产出：**"统计目录大小并生成报告"的脚本**（计划 §四 第 2 周 Day 10）。
 
-**开工顺序（约 3.5–4 小时）**：
+**9/23 的结果（Day 9 = 完整完成，100%）**：
+- **三笔欠账全清**：三个 recall 重写（`curry` 6/6、`debounce` 4/4、`deepClone` 4/4、`throttle` 5/5）、零提示题第 3 道 `flatOnce`（实现 + 自写判据 4/4）、TS 类型速查表 5 条自述 + 逐条核对。
+- **事件循环**：4 个实验（**都先写预测再跑**）+ 六阶段表 + 两个机制问题。
+- **两处真收获**：① 他自己发现"**加一段忙等 → `setTimeout(0)` 反超 `setImmediate`**"（AI 用三组对照确认了原因）→ 实证了"主模块里先后**不保证**"；② 他的卡点自述"**无法从已有知识提取**"—— 精确说出了「检索失败」这个词。
+- **"机制层"三处刚起步**（已进「忘了的」清单 #34–#36）：宏任务之间没有统一先后 / poll 为什么"卡住等 I/O" / 微任务的清空时机（**每执行完一个回调就清一次** —— AI 已实测：同一 timers 阶段里两个定时器，第一个回调里排的 `micro` 会插在两者之间）。
+- **记账（AI 侧）**：今天的 `Array.isArray` 与"拆一层"三种写法**有 AI 帮助**；`notes/ts-cheatsheet.md` 第六节（大写 vs 小写）由 AI 写。
 
-1. **补 3 项欠账（约 1 小时）**
-   - **⑤ 回想三格**：`node week1-language/recall-verify.js` 跑 `curry` / `deepClone` / `throttle`（工具 9/23 已适配 `.ts`；`debounce` 那天已做：1/3 → 修一个 typo → 3/3）
-   - **零提示题第 3 道** `flatOnce`（只给题目 + 验收标准，不给骨架）
-   - **"TS 类型快查表" 20–30 分钟** —— 接住他 9/22 的卡点 #1：**"TS 中很多类型的表示方法不知道，一旦用不了 any 就卡住"**（这是"资料缺口"的第 8 例：TS 类型语法从没系统排过，全靠遇到一个学一个）
-2. **Day 9 正式内容：Node 架构与事件循环** —— **必须先回到 9/21 的现场**：`week1-language/day08-event-loop.js` 的 8 个标记顺序 + 他答错的 `.then` vs `await` 对照实验 + 他明确说的三条"不知道"（`process.nextTick` 是什么、`setTimeout` 属于 timers 队列、"事件函数"是什么）。
-3. 日志 + commit + push
-
-**9/22–9/23 这两天的关键结果（详见 `notes/day08.md` 的「第 2 天」段）**：
-- ✅ **TypeScript 转换全部完成**：`src` 5 个模块 + `test` 5 个文件全转 `.ts`；`pnpm test` **26 条全绿**、`pnpm exec tsc --noEmit` **零报错**（这次是真的 —— 10 个文件都在 `include` 里）。
-- ✅ 顺延的 ③ `Promise.all` 家族、④ ESM vs CJS 笔记也补完了（ESM/CJS 笔记是他查着资料写的，按"**AI 辅助、不算掌握**"记账 → 在「忘了的」清单 #23–#25）。
-- ⚠️ **字符级手滑累计 7 次**（第 7 次是 `cleaarTimeout`，害得 debounce 的 recall 判据 1/3）。**这是目前最值得盯的习惯问题** —— 对策仍是"写完立刻跑"。
-- ⚠️ **`debounce` 的 immediate 语义他记成了另一种**（他的版本"每次都立刻执行" vs 工具箱的"leading + trailing，delay 内忽略后续"）→ 而**工具箱那条判据覆盖不到这个差异**（只测了第一次调用）→ 请他在 9/23 之后自己判断"是记错还是手滑"。
-
-**⚠️ 给下一位会话的环境事实（能省半小时，都已实测）**：
-- `pnpm add -D typescript @types/node`（**`@types/node` 必须装**，否则 `require` / `module` 报 `Cannot find name`）。
-- **TS 7.0.2 删掉了 `moduleResolution: "node"`**（报 `TS5108`）→ tsconfig 用 `module: "nodenext"` + `allowImportingTsExtensions: true` + `types: ["node"]`。
-- `node 文件.ts` 能直接跑（Node 24 类型剥离）、`node --test` **会自动发现 `*.test.ts`**、`require('../src/x.ts')` 也能用 → **不需要 Vitest / tsx**（Vitest 挪到第 3 周）。
-- 递归函数报 `TS7023/TS7024` 时要显式写返回类型（"递归藏在回调里"才报，纯自递归 `return f(x)` 反而不报）。
-- ⚠️ **`package.json` 被追加过尾部垃圾**（`tsc` 报 `trailing characters at line 15 column 1`，但**看起来像源码文件的错**）→ 报错里的文件名可能只是"被牵连的"，要顺着命令查真正的源头。**JSON 只能有一个顶层 `{}`。**
-
-**记账（AI 侧，按计划 §一 红线）**：9/22 的 `curry` 转 TS 是 AI **走查示范**了一遍（第一次接触 TS 操作），其余 4 个模块由他自己转；`debounce` 那个 immediate bug 的"修法"也曾由 AI 给出（后经实测确认他原版其实是对的 —— AI 那次误报已记进日志）。
+**给下一位会话的三条**：
+1. 他今天的自述——"零提示写代码时，**需要的代码无法从已有知识提取**" —— 这是当前阶段的主症状。**处理方式仍然是**"指路到他自己的材料 + 让他写第二遍"，**不要重讲概念**（他已经能背出六阶段，缺的是"为什么"和"取出来"）。
+2. 「忘了的」清单已到 **36 条**，其中约 12 条标了"已恢复" → **下次周复盘（Day 15）该做一次"清理 + 重排"**：把已恢复的划掉，只留真欠账。
+3. **第 2 周的 TS 只到"能开 strict 并修完报错"**（已达成）；再往深（泛型/类型体操）**第 3 周用到再说**，别主动加。
 
 ---
 
