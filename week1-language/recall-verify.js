@@ -62,7 +62,10 @@ function expectedExports(moduleName) {
 // 读他的重写稿"实际导出了什么"（只在有失败时才调用，免得执行顶层代码干扰输出）
 function actualExports(file) {
   try {
-    const mod = require(file);
+    // ⚠️ 必须先 resolve 成绝对路径：require('相对路径') 是相对**本文件所在目录**解析的，
+    //    而这里的 file 可能是用户从命令行传进来的相对路径（相对 cwd）→ 会报一个假的
+    //    "Cannot find module"（9/24 实测踩到：明明跑得动，却提示"你的文件加载不了"）
+    const mod = require(path.resolve(file));
     return Object.keys(mod || {});
   } catch (e) {
     return { loadError: e.message };
@@ -96,6 +99,17 @@ function rotationHint() {
   console.log('  · this 的四种绑定 + 箭头函数例外（Day 6）');
 }
 
+// 工具箱转 TS 之后（Day 8），源码/测试都是 .ts —— 提示里别再写死 .js，会指到一个不存在的文件
+function pickFile(dir, base) {
+  return ['ts', 'js']
+    .map((ext) => path.join(dir, base + '.' + ext))
+    .find((f) => fs.existsSync(f));
+}
+function srcShown(moduleName) {
+  const f = pickFile(SRC_DIR, moduleName);
+  return f ? path.relative(REPO, f) : path.join('week1-language', 'p0-toolkit', 'src', moduleName + '.ts');
+}
+
 function main() {
   const moduleName = process.argv[2];
   if (!moduleName) { rotationHint(); process.exit(0); }
@@ -104,7 +118,7 @@ function main() {
     .map((ext) => path.join(TEST_DIR, moduleName + '.test.' + ext))
     .find((f) => fs.existsSync(f));
   if (!testFile) {
-    console.log('❌ 工具箱里没有 test/' + moduleName + '.test.js，没判据可用。');
+    console.log('❌ 工具箱里没有 ' + moduleName + '.test.{ts,js}，没判据可用。');
     console.log('   可用的模块：' + listModules().join('、'));
     process.exit(1);
   }
@@ -147,9 +161,9 @@ function main() {
     // （2026-09-21 真实踩到过：test/throttle.test.js 整段被注释掉，于是 throttle 拿到了 1/1 的假绿。）
     const liveTests = (fs.readFileSync(testFile, 'utf8').match(/^\s*test\s*\(/gm) || []).length;
 
-    console.log('=== 复习验收：' + moduleName + '（用工具箱 test/' + moduleName + '.test.js 判）===\n');
+    console.log('=== 复习验收：' + moduleName + '（用工具箱 ' + path.relative(REPO, testFile) + ' 判）===\n');
     if (liveTests === 0) {
-      console.log('⚠️ 判据是空的：test/' + moduleName + '.test.js 里一条 test() 都没有（被注释掉了？）。');
+      console.log('⚠️ 判据是空的：' + path.relative(REPO, testFile) + ' 里一条 test() 都没有（被注释掉了？）。');
       console.log('   "通过 ' + pass + '/' + tests + '" 这个绿不算数 —— 先把那个测试文件修好，再来复习。');
       process.exitCode = 1;   // 提前 return 会跳过 finally 之后的赋值，所以这里直接设
       return;
@@ -158,7 +172,7 @@ function main() {
 
     if (fail === '0') {
       console.log('✅ 全绿 —— 这个模块还记得住。下一轮换一个。');
-      console.log('   收尾（30 秒）：打开 p0-toolkit/src/' + moduleName + '.js 扫一眼，看你写的和它的差异。');
+      console.log('   收尾（30 秒）：打开 ' + srcShown(moduleName) + ' 扫一眼，看你写的和它的差异。');
     } else {
       console.log('下面是没有通过的用例（每条的括号里通常写着"实际得到了什么"）：\n');
       const failing = out.split('\n').filter((l) => /^\s*✖/.test(l));
@@ -173,7 +187,7 @@ function main() {
       }
 
       console.log('');
-      console.log('【这才是收获的地方】先别急着改代码 —— 打开 p0-toolkit/src/' + moduleName + '.js，');
+      console.log('【这才是收获的地方】先别急着改代码 —— 打开 ' + srcShown(moduleName) + '，');
       console.log('   带着"我哪一行想岔了"的问题读一遍，然后**合上再写一遍**（第二遍才算过）。');
 
       // 导出名对不上是"手滑"里最常见的一类，直接点名（2026-09-22 加）
@@ -181,7 +195,8 @@ function main() {
       if (want) {
         const got = actualExports(rewriteFile);
         if (got && got.loadError) {
-          console.log('   ⚠️ 你的文件加载不了：' + got.loadError + '（先跑 node --check）');
+          const isSyntax = /SyntaxError|Invalid or unexpected token|Unexpected token/.test(got.loadError);
+          console.log('   ⚠️ 你的文件加载不了：' + got.loadError + (isSyntax ? '（先跑 node --check 定位语法）' : ''));
         } else if (got) {
           const missing = want.filter((n) => !got.includes(n));
           if (missing.length) {
