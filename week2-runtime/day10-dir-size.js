@@ -5,6 +5,7 @@ const fsp = require("node:fs/promises");
 const path = require("node:path");
 const {stat} = require("node:fs/promises");
 const { parseArgs } = require('node:util');
+const { json } = require("node:stream/consumers");
 //统计一个目录的总大小，并生成一份报告。
 //先读取当前目录的内容 raddirSync(dir,{withFileTypes:true})
 //whitFileTypes要true 默认是false，就输出字符串
@@ -69,49 +70,114 @@ async function dirSize(dir,n=5){
 
 
 
-async function main() {
-  const { values, positionals } = parseArgs({
-    // ① 只把"用户写的那些"交给它（前两个是 node 和脚本自己）
-    args: process.argv.slice(2),
-    // ② 每个选项三样东西：名字、type（只能是 string / boolean）、default
-    options: {
-      top:  { type: 'string',  default: '5' },    // 命令行：--top=3 或 --top 3
-      json: { type: 'boolean', default: false },  // 命令行：--json（布尔选项：写了就是 true）
+// async function main() {
+//   const { values, positionals } = parseArgs({
+//     // ① 只把"用户写的那些"交给它（前两个是 node 和脚本自己）
+//     args: process.argv.slice(2),
+//     // ② 每个选项三样东西：名字、type（只能是 string / boolean）、default
+//     options: {
+//       top:  { type: 'string',  default: '5' },    // 命令行：--top=3 或 --top 3
+//       json: { type: 'boolean', default: false },  // 命令行：--json（布尔选项：写了就是 true）
+//     },
+//     // ③ 目录是【位置参数】—— 不写这句，默认会被当成"非法参数"抛错
+//     allowPositionals: true,
+//   });
+
+//   const dir = positionals[0] || '.';
+//   const top = Number(values.top); // ④ string 类型拿到的永远是字符串，自己转数字
+
+//   try {
+//     const report = await dirSize(dir, top);
+
+//     // ⑤ 输出分两条路：机器读的走 JSON，人读的走下面那套  
+//     if (values.json) {
+//       console.log(JSON.stringify(report, null, 2)); // json 模式只打 JSON，一句人话都别混进去
+//       return;
+//     }
+
+//     console.log(`目录：${dir}`);
+//     console.log(`总大小：${report.totalBytes} 字节（${report.fileCount} 个文件）`);
+//     if (report.largest.length === 0) {
+//       console.log('（这个目录里没有文件）');
+//       return;
+//     }
+//     console.log(`最大的 ${report.largest.length} 个：`);
+//     for (const f of report.largest) {
+//       console.log(`  ${String(f.bytes).padStart(8)}  ${f.path}`);
+//     }
+//   } catch (err) {
+//     console.error(`读不了这个目录：${dir}（${err.code || err.message}）`);
+//     process.exitCode = 1;
+//   }
+// }
+
+// if (require.main === module)main();
+// module.exports ={dirSize};
+
+
+
+
+
+
+//day11欠账内容
+
+//args / options.<名字> 三要素
+//键名 type类型（只能是string，boolean） 还有初始值default
+//为什么必须 allowPositionals: true
+//这串代码的意思是位置参数为该目录，不写这一句会抛错（因为不写位置参数系会将这个参数会被当成‘非法参数’抛错）
+//取值是 values.xxx 与 positionals[0] / 输出为什么分两条路
+//分为人机两条路，机器人不需要字符串文本的显示，只提供数据更容易识别，人需要显示字符串文本来识别这个数据到底指的是什么
+
+
+async function main(){
+  const {values,positionals}=parseArgs({
+    args : process.argv.slice(2),
+    options:{
+      top:{
+      type : "string",
+      default : "5" ,
     },
-    // ③ 目录是【位置参数】—— 不写这句，默认会被当成"非法参数"抛错
-    allowPositionals: true,
+    json:{
+      type : "boolean",
+      default:  false,
+    },
+  },
+  allowPositionals : true ,
   });
+    const dir = positionals[0]||".";//取node可执行文件，没有就取.
+    const top = Number(values.top);//
 
-  const dir = positionals[0] || '.';
-  const top = Number(values.top); // ④ string 类型拿到的永远是字符串，自己转数字
 
-  try {
-    const report = await dirSize(dir, top);
+    try{
+      const report =  await dirSize(dir,top);
 
-    // ⑤ 输出分两条路：机器读的走 JSON，人读的走下面那套  
-    if (values.json) {
-      console.log(JSON.stringify(report, null, 2)); // json 模式只打 JSON，一句人话都别混进去
-      return;
+      //先判断是不是机器人
+      if(values.json){
+        console.log(JSON.stringify(report,null,2));
+        return;
+      }
+      //下面按列表形式进行输出
+      console.log("目录：",dir);//先输出目录
+      console.log("文件总大小:",report.totalBytes,"字节","文件总数量：",report.fileCount,'个文件');
+      //判断里面有没有文件
+      if(report.largest.length=== 0){
+        return console.log("这个目录里没有文件");
+      }
+      console.log("最大的文件有：",report.largest.length,'个:');
+      for(const f of report.largest){
+        console.log(`${String(f.bytes).padStart(8)}${f.path}`);
+      }
+    }catch(err){
+
+      console.log(`读不了这个目录${dir}(${err.code}||${err.message})`);
+      process.exitCode = 1 ;
     }
-
-    console.log(`目录：${dir}`);
-    console.log(`总大小：${report.totalBytes} 字节（${report.fileCount} 个文件）`);
-    if (report.largest.length === 0) {
-      console.log('（这个目录里没有文件）');
-      return;
-    }
-    console.log(`最大的 ${report.largest.length} 个：`);
-    for (const f of report.largest) {
-      console.log(`  ${String(f.bytes).padStart(8)}  ${f.path}`);
-    }
-  } catch (err) {
-    console.error(`读不了这个目录：${dir}（${err.code || err.message}）`);
-    process.exitCode = 1;
-  }
 }
 
-if (require.main === module)main();
-module.exports ={dirSize};
+if(require.main=== module)main();
+
+module.exports={dirSize};
+
 
 
 

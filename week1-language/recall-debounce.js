@@ -1,20 +1,23 @@
 
 
-function debounce(fn,delay,immediate=false){
-    let timer = 0 ;
-    return function(...arg){
-        if(timer){
-            clearTimeout(timer)
-        }
 
-        if(immediate){
-            return fn.apply(this,arg);
+
+function debounce(fn,delay,immediate){
+    let timer = null ;
+    let result = 0 ;
+    return function(...arg){
+        if(timer){  
+            clearTimeout(timer);
         }
-        let result = 0;
-        timer = setTimeout(()=>{result=fn.apply(this,arg);},delay);
+        if(immediate){
+            let callNow = !timer ;
+            if(callNow){
+                 result = fn.apply(this,arg);
+            }
+        }
+        timer = setTimeout(()=>{timer=null ;result= fn.apply(this,arg);},delay);
         return result ;
     }
 }
 
-
-module .exports={debounce};
+module .exports = {debounce};

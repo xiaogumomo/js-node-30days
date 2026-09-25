@@ -56,7 +56,7 @@ const probeOut = `${probeRequire.stdout || ''}${probeRequire.stderr || ''}`;
 let guardProblem = false;
 let probeCrash = null;
 if (scriptExists) {
-  if (/SyntaxError|Cannot find module|ERR_MODULE_NOT_FOUND/.test(probeOut)) {
+  if (/SyntaxError|ReferenceError|TypeError|Cannot find module|ERR_MODULE_NOT_FOUND/.test(probeOut)) {
     // 挑「错误那一行」，别挑 Node 的版本号（最后一行往往是 Node.js v24.x）
     const lines = probeOut.trim().split('\n').map((l) => l.trim()).filter(Boolean);
     const errLine = lines.find((l) => /^(SyntaxError|ReferenceError|TypeError|Error|Cannot find module|ERR_)/.test(l));
