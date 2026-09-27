@@ -4,8 +4,14 @@
 //
 // 结构照项目惯例分两档：
 //   · 必过（判对错）—— classify 规则 / 干跑打印计划 / **干跑绝不动文件（快照对比）** /
-//                     `--apply` 也不动文件 / 目录不存在时友好报错 / 空目录 / 模块能被 require
+//                     给了 `--target` 的干跑也不动文件（连目录都不建）/ 目录不存在时友好报错 / 空目录 / 模块能被 require
 //   · 探针（只记录不判错）—— --verbose / --target / 无参数用法 / 子目录要不要递归
+//
+// ⚠️ 2026-09-27（Day 13）补了 03，两件都补成**跨阶段都成立**的写法（免得 Day 14 还要改一次）：
+//    · 原文是「03 `--apply` 也不许动文件（今天还没实现它）」—— 那是 Day 12 的写法，**Day 14 起 `--apply` 会真的搬文件**，照旧写就会把正确实现判红。
+//    · 现在 03 = ①「**干跑**即使给了 `--target` 也不许动文件、连目录都不许建」（永远成立）
+//              ②「`--apply` 要么**真的搬了**、要么**明说没实现 + 非零退出码**」（两个阶段都成立：**不许悄悄不动也不吭声**）。
+//    · `--apply` 真的搬之后的行为（搬 + 校验 + 不丢 + 失败隔离 + 幂等）归 `test/apply.test.js` 管。
 //
 // 判据在系统临时目录造一棵小树（跑完删掉，不碰仓库）：
 //   photo.JPG  images（大写也要认得）      pic.png   images
@@ -214,22 +220,48 @@ test('02 干跑：打印计划 + 汇总 + 【文件一个都没动】', { skip }
   );
 });
 
-test('03 --apply 也不许动文件（今天还没实现它）', { skip }, () => {
+test('03 底线两条：干跑给 `--target` 也不许动（连目录都不建）；`--apply` 要么真搬、要么明说没实现', { skip }, () => {
+  // ── ① 干跑的底线（永远成立）：不给 --apply，一个文件都不许动，也不许建目录 ──
   const before = snapshot(srcDir);
-  const r = runCli([srcDir, '--apply']);
+  const dryTarget = path.join(labRoot, 'dry-run-target');
+  const r = runCli([srcDir, '--target', dryTarget]);
   const out = `${r.stdout || ''}${r.stderr || ''}`;
 
-  const after_ = snapshot(srcDir);
   assert.deepStrictEqual(
-    after_,
+    snapshot(srcDir),
     before,
-    '⚠️ **`--apply` 动了文件**！今天它还不该实现（Day 14 才做），必须先做到"怎么调都不动文件"。\n' +
-      `   跑之前：${before.join(' | ')}\n   跑之后：${after_.join(' | ')}`
+    '⚠️ **没给 `--apply` 却动了文件**！干跑（默认）永远是只读的 —— 加了 `--target` 也一样。\n' +
+      `   跑之前：${before.join(' | ')}\n   跑之后：${snapshot(srcDir).join(' | ')}`
   );
   assert.ok(
-    r.status !== 0 || /没实现|尚未实现|未实现|Day\s*14|not implemented/i.test(out),
-    `今天 \`--apply\` 应该明确说明"还没实现"（并给非零退出码）。实际输出：\n${out.slice(0, 400) || '（没有任何输出）'}`
+    !fs.existsSync(dryTarget),
+    '干跑不该在磁盘上留下任何东西 —— 连目标目录都不该建（建目录也是"动文件系统"）'
   );
+  assert.strictEqual(
+    r.status,
+    0,
+    `干跑 + \`--target\` 正常应该退出码 0（把计划打印出来就算成功）。实际 ${r.status}，输出：\n${out.slice(0, 400) || '（没有任何输出）'}`
+  );
+
+  // ── ② `--apply`（跨阶段都成立）：要么真的搬，要么明说没实现 + 非零退出码 ──
+  //    用 srcDir 的【副本】跑：Day 14 起 --apply 真的会搬文件，不能拿共享的 srcDir 冒险
+  const copy = path.join(labRoot, 'apply-probe');
+  fs.cpSync(srcDir, copy, { recursive: true });
+  const copyBefore = snapshot(copy);
+  const applyTarget = path.join(labRoot, 'apply-probe-target');
+  const r2 = runCli([copy, '--apply', '--target', applyTarget]);
+  const out2 = `${r2.stdout || ''}${r2.stderr || ''}`;
+
+  const movedSomething = snapshot(copy).join('|') !== copyBefore.join('|');
+  if (!movedSomething) {
+    assert.ok(
+      r2.status !== 0 || /没实现|尚未实现|未实现|Day\s*14|not implemented/i.test(out2),
+      '`--apply` **既没真的搬文件、也没有明说"还没实现"**（退出码 0）→ 调用方会以为文件已经整理好了。\n' +
+        '   两种可能：① 还没实现 → 那就打印"还没实现"并给**非零退出码**；\n' +
+        '   ② 已经实现了、但这次一个文件都没搬 → 那是 bug（扫描或搬家那段没跑起来），去跑 `apply.test.js` 看具体红在哪。\n' +
+        `   实际退出码 ${r2.status}，输出：\n${out2.slice(0, 400) || '（没有任何输出）'}`
+    );
+  }
 });
 
 test('04 源目录不存在：一句人话 + 非零退出码（不是崩栈）', { skip }, () => {

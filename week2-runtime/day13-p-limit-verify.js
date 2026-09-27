@@ -205,17 +205,34 @@ test('P 探针：非法 n / 完成顺序 vs 结果顺序（只记录，不判错
   console.log('\n探针（只记录，不判错）：');
 
   // P1 非法 n
+  // ⚠️ 探针**不许把自己挂死**：n=0 / n=-1 时"一个都不跑"是合法设计选择，
+  //    但那样 limit() 的 promise 永远不结算 —— 要把它**记下来**（挂住了），不能让整条探针卡到超时。
+  //    （2026-09-27 实测抓到的：参照实现 pLimit(0) 挂住 → 探针变红，违反了"只记录不判错"。）
   for (const bad of [0, -1, 1.5, '2']) {
+    const label = `  · pLimit(${JSON.stringify(bad)})`;
     try {
       const limit = pLimit(bad);
-      const v = await limit(() => 'ok');
-      console.log(`  · pLimit(${JSON.stringify(bad)}) → 没抛错，跑出来：${JSON.stringify(v)}`);
+      const outcome = await Promise.race([
+        limit(() => 'ok').then(
+          (v) => ({ kind: 'ok', v }),
+          (e) => ({ kind: 'err', e })
+        ),
+        new Promise((r) => setTimeout(() => r({ kind: 'hang' }), 200)),
+      ]);
+      if (outcome.kind === 'ok') {
+        console.log(`${label} → 没抛错，跑出来：${JSON.stringify(outcome.v)}`);
+      } else if (outcome.kind === 'err') {
+        console.log(`${label} → 没抛错，但 limit() 的 promise 被 reject：${outcome.e.message}`);
+      } else {
+        console.log(`${label} → 没抛错，但任务**一直没结算**（挂住了）—— 合法选择，代价是调用方一直等`);
+      }
     } catch (err) {
-      console.log(`  · pLimit(${JSON.stringify(bad)}) → 抛错：${err.message.slice(0, 60)}`);
+      console.log(`${label} → 抛错：${err.message.slice(0, 60)}`);
     }
   }
 
   // P2 完成顺序 vs 结果顺序（结果顺序由 Promise.all 保证，这里给你看清差别）
+  // ⚠️ 同样不许挂死：有任务不结算时（例如超过 n 的任务被丢掉）Promise.all 会永远等下去 → 用带超时的等待。
   const limit = pLimit(3);
   const tasks = [60, 40, 20, 1].map((ms, i) =>
     limit(async () => {
@@ -223,10 +240,15 @@ test('P 探针：非法 n / 完成顺序 vs 结果顺序（只记录，不判错
       return i;
     })
   );
-  const results = await Promise.all(tasks);
-  console.log(`  · 4 个任务的耗时是 [60,40,20,1]ms（完成顺序会是 3,2,1,0）`);
-  console.log(`    而 Promise.all 收上来的结果 = ${JSON.stringify(results)} ← 始终是【传入顺序】`);
-  console.log('  （所以"结果顺序"不用你操心：**Promise.all 按传入顺序收**；你只管并发和排队）');
+  const settled = await settleWithin(tasks, 2000);
+  if (!settled) {
+    console.log('  · 4 个任务里有**没结算**的（Promise.all 会一直等）→ 这条看不了：先修上面 04 那条');
+  } else {
+    const results = settled.map((s) => (s.status === 'fulfilled' ? s.value : `✖${s.reason && s.reason.message}`));
+    console.log('  · 4 个任务的耗时是 [60,40,20,1]ms（完成顺序会是 3,2,1,0）');
+    console.log(`    而 Promise.all 收上来的结果 = ${JSON.stringify(results)} ← 始终是【传入顺序】`);
+    console.log('  （所以"结果顺序"不用你操心：**Promise.all 按传入顺序收**；你只管并发和排队）');
+  }
 
   console.log('  （探针不判错：非法 n 是设计选择，记进日志就行）\n');
 });

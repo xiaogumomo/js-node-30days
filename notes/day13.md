@@ -90,9 +90,11 @@ typeof 大小写又写大写了 循环没有问题，又出现了理解上的疑
 ## ④ 阅读笔记（4 行）
 
 1. `fetch` 在什么情况下才 **reject**（服务器返 404/500 时呢？）：
-2. 怎么把 `AbortController` 接到 `fetch`；`abort()` 之后抛的错 `err.name` 是什么：
-3. `AbortSignal.timeout(ms)` 能不能一行做超时：
+fetch中只有在网络错误的时候才会reject 服务返404/500时也不会reject
+2. 怎么把 `AbortController` 接到 `fetch`；`abort()` 之后抛的错 `err.name` 是什么：名为AbortError的DOMException
+3. `AbortSignal.timeout(ms)` 能不能一行做超时： 可以
 4. 指数退避为什么要"等一会儿 + 翻倍"：
+因为指数退避解决的是“重试风暴”的问题，为了避免让服务器已经过载的时候继续施加压力。
 
 ---
 
@@ -100,15 +102,15 @@ typeof 大小写又写大写了 循环没有问题，又出现了理解上的疑
 
 | 项 | 记录 |
 |---|---|
-| 最小版（一次只跑一个、按顺序出结果）| |
-| 放开到"最多 n 个同时" | |
-| **最大同时数 ≤ n**（判据会查这个数）| |
-| 结果顺序 = 传入顺序 | |
-| **失败隔离**（一个失败不影响其他）| |
-| 排队不丢（超过 n 的确实都跑了）| |
-| `n` 非法时我定的行为 + 为什么 | |
-| **今天最卡的一处** | |
-| **放宽/绕过的地方**（有就写，说明为什么）| |
+| 最小版（一次只跑一个、按顺序出结果）|实现（ai帮我完成的） |
+| 放开到"最多 n 个同时" | 实现（ai帮我完成的）|
+| **最大同时数 ≤ n**（判据会查这个数）|实现（ai帮我完成的） |
+| 结果顺序 = 传入顺序 |实现（ai帮我完成的） |
+| **失败隔离**（一个失败不影响其他）| 实现（ai帮我完成的）|
+| 排队不丢（超过 n 的确实都跑了）|实现（ai帮我完成的） |
+| `n` 非法时我定的行为 + 为什么 |直接抛错，因为除了正整数外的根本没有意义 |
+| **今天最卡的一处** |promise怎么实现完成一个任务之后再进行一个任务=>递归 |
+| **放宽/绕过的地方**（有就写，说明为什么）|无 |
 
 **实测输出（贴一次真实的）**：
 
@@ -122,20 +124,224 @@ typeof 大小写又写大写了 循环没有问题，又出现了理解上的疑
 
 | 项 | 记录 |
 |---|---|
-| 200 → 不重试 | |
-| 500 → 重试到位（请求次数 = retries + 1）| |
-| 服务器不响应 → `timeoutMs` 后放弃 | |
-| 前几次失败、后来成功 | |
-| 全失败 → 抛错（不是吞掉）| |
-| 退避有没有真的等 | |
+| 200 → 不重试 | 实现（ai帮我完成的）|
+| 500 → 重试到位（请求次数 = retries + 1）| 实现（ai帮我完成的）|
+| 服务器不响应 → `timeoutMs` 后放弃 | |实现（ai帮我完成的）
+| 前几次失败、后来成功 | 实现（ai帮我完成的）|
+| 全失败 → 抛错（不是吞掉）|实现（ai帮我完成的） |
+| 退避有没有真的等 | 实现（ai帮我完成的）|
 
 ---
 
 ## 学会了什么
 
-1.
+1. 如何让函数只执行一次，安装执行一次装饰器once（）once设置一个控制函数执行的开关变量called和储存第一次执行结果的result
 
----
+2.fetch()的基本用法 fetch(url，init)url发送一次GET请求返回一个Promise，resolve后得到Response对象
+init 配置method 、 headers 、body 等
+响应体解析方法esponse.json()、response.text()、response.blob()、response.formData()  这些方法也返回的是Promise 需要二次.then 或await
+
+3. fetch的Promise行为
+fetch中Promise只有在**网络故障时候**才返回**reject**，HTTP码404、500等错误不会导致Promise reject 
+必须手动检查response.ok (等价response.status >= 200 && response.status < 300) 来判断请求是否成功
+在**catch**中能捕获到的**错误类型**：TyepError （网络错误或CORS问题）
+AbortError（请求被取消）
+
+4. init 常用配置项的含义
+method GET/POST/PUT/DELETE 请求方法
+headers  {'Content-Type':'application/json'} 请求头
+body   JSON.stringify(data)   请求体（POST/PUT 时使用）
+mode   cors / no-cors / same-origin  跨域模式
+credentials include/same-origin/omit  是否携带Cookie
+cache    default /no -cache/reload  缓存策略
+signal   AbortSignal 实例       用于取消请求
+ 默认credentials 为 same-origin  跨域携带Cookie 需显示设置credentials:'include'
+
+5. Response 对象的关键属性
+response.ok：布尔值，HTTP 状态码是否在 200-299 范围内
+
+response.status：HTTP 状态码（如 200、404、500）
+
+response.statusText：状态码对应的文本描述
+
+response.headers：响应头（Headers 对象，注意 get() 方法获取）
+
+6. “如果 fetch 不会因 404 reject，你怎么处理？”
+
+网络层错误：由 catch 捕获（TypeError）
+
+HTTP 错误：手动检查 response.ok，主动 throw new Error
+
+业务错误：解析响应体后，根据后端返回的 code 或 message 字段判断
+
+超时控制：fetch 本身不支持 timeout，需结合 AbortController 和 setTimeout 实现
+
+7. 取消请求：AbortController
+
+React 组件卸载时防止内存泄漏：
+```
+const controller = new AbortController();
+const signal = controller.signal;
+
+fetch(url, { signal })
+  .then(response => response.json())
+  .catch(error => {
+    if (error.name === 'AbortError') {
+      console.log('请求已取消');
+    }
+  });
+
+// 取消请求
+controller.abort();
+```
+在 React 的 useEffect 中使用时，需要在 cleanup 函数中调用 controller.abort()，防止组件卸载后仍在更新状态。
+
+8. CORS 跨域处理
+ mode: 'cors' 允许遵守 CORS 的跨源请求（非简单请求需预检）
+ mode: 'no-cors'  于简单请求（如图片等静态资源），但响应为 opaque 类型，无法访问数据
+
+
+9.  Fetch vs Axios 对比（面试高频）
+ 对比维度	Fetch	Axios
+来源	浏览器原生 API	第三方库
+JSON 解析	需手动调用 .json()	自动解析
+错误处理	仅网络错误 reject	网络错误 + HTTP 错误均 reject
+超时	需手动实现	内置 timeout 配置
+拦截器	不支持（需封装）	支持请求/响应拦截器
+请求取消	AbortController	CancelToken / AbortController
+浏览器兼容	现代浏览器原生支持	需引入库，兼容性更广
+简单项目或希望减少依赖时用 fetch；复杂项目需要拦截器、超时、自动 JSON 解析时用 Axios
+
+10. 流式响应与 ReadableStream（AI 应用相关加分项）
+近年面试中，尤其涉及 AI 对话类项目，会考察流式数据处理能力：
+
+通过 response.body.getReader() 获取 ReadableStream 的读取器
+
+使用 TextDecoder 将二进制 chunk 解码为文本
+
+配合 AbortController 实现用户中断流式输出
+
+需处理粘包/半包问题（chunk 边界不一定是完整消息
+
+
+11. AbortController  标准的异步任务取消协议
+**AbortController**（控制器）**发号施令**，调用 abort() 方法触发取消操作
+**AbortSignal**（信号） **负责传递消息**  一个只读对象 被传递给具体的异步任务
+核心设计 **控制与信号的分离**  任务发起时  signal 传给异步 API 让任务监听终止信号 任意时机调用控制器的 abort() 方法即可统一终止所有绑定该信号的任务
+任务执行者和任务终止者完全互不感知，彻底解决了传统方案需要透传实例、耦合业务逻辑的问题。
+使用 AbortController 取消 fetch 请求的标准步骤为：创建 AbortController 实例 → 获取 signal 属性并传入 fetch 的选项 → 调用 abort() 方法取消请求。
+
+12. AbortController 的 API 表面
+
+controller.signal  AbortSignal（只读） 获取与控制器关联的信号对象
+controller.abort(reason?)  方法  触发取消操作，可传入自定义原因
+
+
+13. AbortSignal 的关键属性和事件
+signal.aborted：布尔值，表示信号是否已被中止。初始为 false，调用 abort() 后变为 true
+signal.reason：中止原因，默认为一个名为 AbortError 的 DOMException。可以自定义传入原因
+signal.addEventListener('abort', callback)：监听中止事件。AbortSignal 继承自 EventTarget，因此支持事件监听。中止事件只会触发一次
+```
+const controller = new AbortController();
+const signal = controller.signal;
+
+signal.addEventListener('abort', () => {
+  console.log('信号已中止，aborted:', signal.aborted); // true
+});
+
+controller.abort();
+```
+14. AbortError 的识别
+请求被取消   fetch 返回的 Promise  名为 **AbortError** 的 **DOMException** 拒绝
+catch 中需要通过 **error.name === 'AbortError'** 来识别取消操作
+
+
+15. Node.js Fetch 的核心定位
+ Undici 驱动  一个专为 Node.js 从零编写的高性能 HTTP/1.1 客户端
+
+这意味着你可以在浏览器代码、Express 后端、Serverless 函数和 CLI 脚本中使用同一套基于 Promise 的 HTTP API，无需安装 node-fetch、axios 或 request
+
+Node.js 环境**缺少**浏览器的 CORS 和 CSP 限制，请求可以发往任意服务器，同时也没有 XMLHttpRequest 的兼容包袱
+
+
+16. 与浏览器 fetch 相同的要点依然适用：
+
+fetch 返回的 Promise 仅在网络故障时 reject，HTTP 404/500 不会导致 reject，必须手动检查 response.ok
+
+请求体需手动 JSON.stringify()，响应体需手动调用 .json() 解析
+
+POST 请求需在 init 对象中设置 method、headers 和 body
+
+这些与上一轮浏览器 Fetch 的知识点完全一致，在 Node.js 中同样适用
+
+
+17. “Node.js 从哪个版本开始支持 fetch”
+
+v18 开始默认全局可用，v21 转为稳定
+可以通过 process.versions.undici 查看当前 Node 进程内置的 Undici 版本
+
+
+18. Node.js 为 fetch 提供了一组浏览器兼容的全局类，可以直接使用：
+
+FormData：浏览器兼容的 FormData 实现
+
+File：浏览器兼容的 File 实现
+
+Headers、Request、Response：Fetch 标准中的核心类
+
+AbortController / AbortSignal：与浏览器完全一致的取消信号机制
+
+19. 指数退避
+必备配套策略：抖动（Jitter）
+Full Jitter  	random(0, base * 2^n)	              随机性最大，AWS 推荐
+Equal Jitter	base * 2^n / 2 + random(0, base * 2^n / 2)	保留一半确定性
+Decorrelated Jitter	random(base, previous_delay * 3)	基于上次延迟的随机
+
+20. 实践中的抖动比例计算出的退避时间上加上 ±10% 到 ±20% 的随机偏移
+ 
+21. 应该重试的错误（临时性故障）：
+
+网络层：连接重置、DNS 故障、socket 超时
+
+HTTP 5xx：502 Bad Gateway、503 Service Unavailable、504 Gateway Timeout
+
+429 Too Many Requests：速率限制，退避后再来
+绝对不要重试的错误（请求本身的问题）：
+
+400 Bad Request：请求格式错误
+
+401 Unauthorized：凭据错误或过期
+
+403 Forbidden：权限不足
+
+422 Unprocessable Entity：验证失败
+规则：当故障与服务器状态或网络有关时重试；当故障与请求本身有关时快速失败。
+
+22. 幂等性：重试的前提
+重试一个非幂等的请求（比如创建订单、扣款）是极其危险的。如果请求实际上已经成功，但响应超时了，客户端重试会导致重复创建、重复扣款
+解决方法
+只对幂等方法（GET、HEAD、PUT、DELETE）自动重试
+
+对 POST 请求，使用幂等键（Idempotency Key），服务端通过唯一键去重
+
+一个安全的重试策略应该是：指数退避 + 抖动 + 重试预算 + 幂等前提，四样缺一不可。
+
+
+
+23. 尊重 Retry-After 头
+
+对于 429 和 503 响应，服务端可能会在 Retry-After 头中指定建议的等待时间。如果你的退避计算出的时间短于 Retry-After，应该以 Retry-After 为准
+
+24.  设置最大重试次数和退避上限
+最大重试次数：建议 3-5 次，超过后让错误透出，不要无限沉默重试
+
+退避上限（Cap）：避免延迟无限增长。例如，设置 30 秒为上限，超过后不再增加
+
+25. 与 AbortController 的结合
+在重试逻辑中，必须支持取消。如果用户主动取消了请求，不应该继续重试。同时，每次重试前应该新建一个 AbortController 实例，确保前一次失败的信号不会污染下一次请求
+
+
+--- 
 
 ## AI 复核（① 清尾巴的核对 —— 这一段是 AI 补的，不是学生写的）
 
@@ -241,11 +447,107 @@ typeof 大小写又写大写了 循环没有问题，又出现了理解上的疑
 - **条件**：要**合上重写一遍**（那一遍才算他的）—— 可今天做（5 分钟），也可顺延；建议**把它当 `p-limit` 的热身**。
 - 计划侧：**Day 15 周复盘**把"**怎么用闭包记住状态**"归到「忘了的」清单（该族第 4 次出现：`debounce` 的 `timer` → `curry` 的累积 → `groupBy` 的 `?? []` → 今天的 `called`）。
 
+### ④ ⚠️ 一个假的"9/9"：`cli.js` 不在 `src/` 里（AI 补充，9/27 实测）
+
+> 这一条是 AI 补的（学生当时停在 ④ 阅读，没参与）。写在这里是因为它**推翻了 ①「清 Day 12 尾巴」那一格的结论**。
+
+**现象**：AI 按 HANDOFF 的规矩"重述旧问题前先重跑"，跑 `node --test projects/p1-cli-organizer/test/cli.test.js` → **`pass=1 fail=1 skipped=7`**，红的那条写着"还没看到 `src/cli.js`"。
+**根因**：实现躺在 **`projects/p1-cli-organizer/test/cli.js`**（`src/` 是空目录），而判据里写死的是 `../src/cli.js`；那份错位的文件还被 `git add -A` 扫进了 `80ce96e` —— **所以"① 清尾巴"其实只完成了一半**：代码写出来了、判据也**真的绿过**（AI 当时在 `src/` 上验的），但**位置不对，换台机器 `git clone` 下来根本跑不起来**。
+**处理**：① 复制回契约位置 `projects/p1-cli-organizer/src/cli.js`（**逐字节同一份**，`cmp` 比对过）→ 判据回到 **9/9** ✅；② 那份错位的移走（内容不会丢：`src/` 里是同一份、git 历史里也有；要取回：`git checkout HEAD -- projects/p1-cli-organizer/test/cli.js`）。
+**顺带逮到一条"幽灵测试"**：`test/cli.js` 这个文件名**会被根目录的 `node --test` 当成测试文件发现**（`test/` 下**任意 `.js`** 都在发现范围内），而它里面 **0 条 `test()`** → 被算成 **1 条通过**。实测：移走前根目录 **46 条**（含这个幽灵）、移走后 **45 条**（= 工具箱 27 + `cli.test.js` 9 + `apply.test.js` 9）。
+**归纳**：这是"假绿"的**第 5 种**（前四种见 HANDOFF §三），根因和"接线"族**同一个**（位置/连接没对上）—— **不是能力问题**。
+**规矩（给下一个会话）**：① **`test/` 只放 `*.test.js`**，实现一律进 `src/`；② 报"全绿 / 几条"之前**先对账**（27 + 各判据文件条数）；③ **别人（或上一份文档）说"昨天已经 9/9"时，先自己跑一遍再引用**。
+
+**同日 AI 另外做的（给 Day 14 铺路，都在 9/27 完成）**：`p-limit` / `fetch` 两份判据**重跑负向验证**（并修掉 `p-limit` 探针会自己挂死的 bug）、新写 **`test/apply.test.js`**（9 条；7 个变体 + 两种冲突策略都验过）、补掉 `cli.test.js` 里会过期的 03、备好 **Day 14 的任务书与日志模板**。明细见 `notes/day14.md` 的「AI 复核」。
+
+### ⑤ 主线 `p-limit`（AI 复核 + 记账 + **判定：不合格** —— 学生自己要求的）
+
+**判据实测：8/8 全绿**（必过 7 + 探针 1）。探针记录：`pLimit(0)` / `-1` / `1.5` / `"2"` 四种非法输入**都抛 `TypeError`**（他自己定的行为，一致）。**实现是对的**，这一点先说清楚。
+
+**他主动报的账（原话）**："是靠 ai 辅助我完成的，我只是看懂理解了，**无法做到裸写的水平**，想不到代码中所写的（也是 ai 教我的）`queue.push({fn,resolve,reject})` 和 `const {fn,resolve,reject} = queue.shift()`，想不到 `Promise.resolve().then(()=>fn()).then(resolve,reject).finally(()=>{activeCount--;next()})` 这种 promise 实现递归，**其他的没有什么问题，但这几处已经是这个代码最重要的部分了，请给我判不合格吧。**"
+
+**逐条核"哪部分是谁的"**（判"哪部分是谁写的"**只能问本人**，这条他自己报得很准）：
+
+| 这份代码里的东西 | 谁想的 | 判读 |
+|---|---|---|
+| 非法 `n` 的守卫（`Number.isInteger` + `< 1` → `TypeError`）| **他** | 是设计选择；探针 4 个用例行为一致 ✅ |
+| `queue` 数组 + `activeCount` 计数 | **他** | "攒数组 / 攒数字"那族他早就会 |
+| `next()` 的两个退出条件（名额满 / 队列空）| **他** | 调度器的骨架，他写对了 |
+| `limit(fn)` 返回 `new Promise(...)` 并把 `fn` 入队 | **他**（骨架）| —— |
+| **队列里连 `resolve`/`reject` 一起存、之后兑现**（"票据"）| **AI 教的** | ❌ 载重处之一 |
+| **`Promise.resolve().then(()=>fn()).then(resolve,reject).finally(...)` 这条链** | **AI 教的** | ❌ 载重处之二 |
+
+**判定：不合格**（他说得对，也符合项目规矩）—— 这道题的**题眼就是"空出一个名额就叫下一个"**，而那张"票"和这条链正是题眼本身。**抄到的不算他的那遍。**
+
+**归类：不是知识缺口，是"学过、没长在身上"（检索失败族）**（HANDOFF §五的判据：① 排过没有？② 学过之后有没有留下"能跑的东西"？）—— 两处的零件**都在他自己的材料里**：
+- **"票"**：他自己写过 `week1-language/day07-promise.js:34` 的 `buyfood` —— `return new Promise((resolve) => { setTimeout(() => resolve("炒饭做好了"), 3000) })`。**动作一模一样**（把 `resolve` 交给别人、由别人在合适的时机调用），只把"定时器"换成"队列 + 调度器"。
+- **`.finally`**：`notes/day07-day2.md` 的阅读表第 2 条**明确列了** `then` / `catch` / **`finally`**，还配了官方任务「基于 promise 的延时」→ **排过、但没留下能跑的东西**（全仓库 `.finally(` 只出现在今天这一份里）→ **所以这不是书单缺口，不需要补章节**。
+- 这一族**第 5 次**出现：`debounce` 的 `timer` → `curry` 的累积参数 → `groupBy` 的 `?? []` → `once` 的 `called` → 今天 `p-limit` 的"队列 + 票据"。
+
+**处理（照"检索失败"的规矩：不重讲概念、不重给代码，只指路 + 第二遍 + 隔天同类题）**：
+1. **合上重写一遍**，那一遍才算他的。**排期：Day 14 开场第一件**（和 `once` 的重写并排 —— 两道是同一族）。
+   **口径**：合上 `day13-p-limit.js`，**允许查他自己的日志 / MDN**，不许看自己那份文件；判据现成 → `node --test week2-runtime/day13-p-limit-verify.js`，目标 **8/8**。
+   ⚠️ **今天 ⑦⑧ 那一步（提交）先做** —— 让这份 AI 辅助版进 git 历史，重写时才有对照，账也留得住。
+2. **重写后在日志里回答两个"为什么"**（机制层，不是背答案）：
+   - `activeCount--` 和 `next()` 为什么放在**"无论成功失败都会执行"**的那一支里？**只写在成功分支**会怎样？（提示：去问判据 03 "失败隔离"那一条）
+   - 队列里为什么要**连 `resolve`/`reject` 一起存**？只存 `fn` 行不行？（提示：`limit(fn)` 必须在**还没轮到它**的时候就返回东西给调用方）
+3. **Day 15 周复盘**：把"**闭包记状态 + 调度**"这一族正式归进「忘了的」清单（第 5 次出现）。
+
+**要记的一条（对他的）**：他**主动**报"这是 AI 教的、我做不到裸写、请判不合格" —— 这正是计划书附录 D 自检里那句"**能说清我的代码里哪部分是 AI 帮我写的**"的实证，也是这个项目里最难得的一条习惯。**"不合格"是对这道题的，不是对他的。**
+
+
+### ⑥ 主线 B `fetch`（AI 复核 + 记账 + **判定：不合格，但归类与 ⑤ 不同**）
+
+**判据实测：8/8 全绿**（必过 7 + 探针 1）。探针还记到两件真东西：**退避间隔 `[102, 202]ms`**（真的在翻倍 ✅）、**超时那一次服务器"看到"了请求被掐断** ✅（说明 `abort()` 是真把请求掐了，不是"客户端提前返回、请求还在服务器上跑"）。
+
+**他主动报的账（原话）**："已完成并全绿，和前面一个任务一样是靠 ai 辅助完成的，**我因为今天刚学 fetch，如果让我自己独自完成就肯定是不可能的**，请把这个给我判定为不合格。"
+
+**记账（这份文件里 AI 给的设计元素，逐项记 —— 免得以后分不清）**：
+
+| # | 文件里的东西 | 性质 |
+|---|---|---|
+| 1 | `class HttpError extends Error`（带 `status`、`name` 的自定义错误子类）| **全新**（今天第一次出现）|
+| 2 | `AbortController` + `setTimeout(() => controller.abort(), timeoutMs)` + `clearTimeout` | 今天 ④ 阅读第 2 条，**第一次动手** |
+| 3 | 退避 `baseDelayMs * 2 ** (attempt - 1)`（首次不等待）| 今天 ④ 阅读第 4 条，**第一次动手**（零件是他写过的 `sleep`）|
+| 4 | **错误/状态分类**（2xx 直接返回 / 5xx 记错后重试 / 4xx 不重试直接抛 / `AbortError` 算超时后重试 / 其他网络错重试）| **这是这份代码真正的"设计"**，AI 给的 |
+| 5 | `lastError` 兜底（全失败抛最后一次错误，不把 undefined 抛出去）| AI 给的 |
+| 6 | 参数校验（`retries` 非负整数、`timeoutMs > 0`）| 看着像他的风格，但**按他报的账整份都记 AI 辅助**；具体哪几块他自己能写，等他填 ⑥ 那张表 + 做完底下的小练习才知道 |
+
+（**规矩**：判"哪部分是谁写的"只能问本人，不能从代码风格猜。）
+
+**判定：不合格** —— 和 ⑤ 一样，AI 写的不能算他的那遍。**但归类不同，处理方式也就不该一样**：
+
+| | ⑤ `p-limit` | ⑥ `fetch` |
+|---|---|---|
+| 卡点性质 | **检索失败**：零件都在**他自己的材料**里（`buyfood` 的"票"、`day07-day2.md` 排过的 `.finally`），只是取不出来 | **今天第一次见**：`AbortController` / `signal` / `AbortError` / 退避**是今天 ④ 才读的**，`HttpError` 子类**全新** |
+| 该怎么补 | **合上重写**（不讲概念、不重给代码）| **不能整份"合上重写"**（那不公平，也测不出东西）→ **先分块亲手写**，再**隔一天**合上重写整份 |
+| 排期 | Day 14 开场（20 分钟）| 分块练习 **Day 14 的 0b 时段（20 分钟）**；**整份重写排到 Day 15/16 开场**（`fetch` 在 9/27 任务书里本来就写着"可顺延"）|
+
+**分块练习（每块 5–10 分钟，都在 `week2-runtime/day13-fetch-practice.js` 里留一个能跑的东西）**：
+
+| # | 写什么 | 为什么拆这一块 |
+|---|---|---|
+| ① | `fetchOnce(url, timeoutMs)`：用 **`AbortSignal.timeout(ms)`** 一行做超时 | 先把"超时"故意做成**一行**，看清 `signal` 是怎么接进 `fetch` 的（也顺便看清：现成那份里 3 行可以合成 1 行）|
+| ② | 同上，但**手写** `AbortController` + `setTimeout(abort)` + `clearTimeout` | 手写一遍才知道 `signal` 不是魔法；`AbortSignal.timeout` 就是它的语法糖 |
+| ③ | `retryFixed(url, times)`：**只重试**（固定等 50ms，用他写过的 `sleep`），不退避、不分类 | 把"重试循环"单独拎出来练 —— 这一块他一定写得出来 |
+| ④ | `HttpError extends Error` + **分类**（200 直接回 / 500 重试 / 404 不重试）| 这是**设计**不是 API；设计要靠"自己定规则 + 说为什么"才能长在身上 |
+
+**另外**：把"**fetch 封装（最小版）**"**加进第 3 周的轮转表**（判据 `day13-fetch-verify.js` 现成，正好当复习）。
+
+**重写后在日志里回答两个"为什么"**（机制层）：
+1. fetch 在服务器返 500 时**不会 reject** → 那"要不要重试"的依据是什么？`res.ok` 和 `res.status` 各覆盖什么情况？
+2. `abort()` 之后 fetch 抛的错 `err.name` 是什么？为什么**靠它**就能把"超时"和"其他网络错误"分开？（探针实测：服务器那边**看到**了连接被掐断）
+
+**顺带一条要记进计划侧的账**：⑤（`p-limit`，**零新 API、纯组合**）他卡在**组合取不出来**；⑥（`fetch`，**全是新 API**）他卡在**首次上手**。**两种卡点要的介入方式完全不同** —— 这正是计划书 §一 那笔"每天新 API 的密度"的又一笔实证。
+
 ---
 
 ## 卡在哪里
 
-1.
+1.fetch的真实运用
+2.promise的真实应用+递归
+3.不知道该如何通过闭包实现只执行一次函数
+4.
 
 ---
 
