@@ -4,8 +4,8 @@
 > 1. **交接**：让一个没有任何对话历史的新 AI 会话，在 5 分钟内接手这个项目
 > 2. **记录**：把这段学习过程公开下来 —— 包括协作方式、走过的弯路、踩过的坑
 >
-> **最后更新**：2026-09-24（**Day 10 进行中**：任务书 + 判据已就位，等学生的实现）
-> **当前状态一句话**：**Day 1–9 已完成**，代码全部推送到 GitHub（`git pull` 已同步、工作区干净）；**Day 10（9/24）= 内置模块**，产出"统计目录大小并生成报告"的脚本 —— 判据 `week2-runtime/day10-dir-size-verify.js` 已写好并做过负向验证（**未提交**，和当天产出物一起提交）。
+> **最后更新**：2026-09-27（**Day 13 进行中**：①②③④ 已完成；**⑤ 主线 `p-limit` 还没开始**；**Day 12+13 共 21 个文件没提交**）
+> **当前状态一句话**：**Day 1–9 已完成**，代码全部推送到 GitHub（`git pull` 已同步、工作区干净）；**Day 13（9/27）= 网络请求与并发** 进行中 —— **已推送的最后一次提交是 `f6e6851`（Day 11）**，也就是说 **Day 12 + Day 13 的全部工作（21 个文件）还在本地、没进版本库** ⚠️。**Day 12 已完成**：项目 1 的 `cli.js` 判据 **9/9**（干跑安全）、HTTP 阅读 19 条、`countByExt` 6/6。**Day 13 做到一半**：轮转 `deepClone` **4/4**、零提示题 `once` **5/5（但靠问 AI 完成 → 要合上重写）**、阅读 `fetch` 4 条已完成；**主线 `p-limit`（裸写并发池）未开工**。
 > **上一段对话的会话 ID**：`sess_0b328783-cf26-4840-b6e9-e5bb6ca7fe82`（那是 9/20 那一段；**9/23 的 Day 9、9/24 的 Day 10 这两段的 ID 都没记**）
 > → **优先读这份文件就够了**，不必去翻会话。
 
@@ -134,6 +134,12 @@ js-node-30days/
 | **"push 是数组专用的"心智模型**（9/24 新增，**他明确要求记下来**） | Day 10 `groupBy`：他自述"**我一直不知道对象内的键也能使用 push，我还以为只有数组能用 push**，这条帮我记一下，我是不知道的或者忘记了" | **`push` 跟着"取出来的那个值"走，不跟着"它存在哪"走**：对象里存的数组，`out[key]` 取出来就是数组，数组方法照用；取出来是数字就能 `+1`（他自己的 `countChars` 就是后者）。**看值的类型，不看容器的类型。** 归类是**概念错**（同 `typeof "Object"` 那次），**不是手滑** → 讲原理 + 进清单 + **下次同类题再考** |
 | **「累加器起点/类型」族（9/24 第 4 次）** | `countChars`（缺 `0` 起点）→ `myReduce`（`acc` 初值从哪来）→ `flatOnce`（`let result = 0`，两次）→ **Day 10 `groupBy`**：外层起点 `{}` 建对了，**每个键的「值的起点」`[]` 没建**（写成了覆盖） | 口诀：**"写累加器之前先问《我在攒什么？》"**（攒数组→`[]`，攒数字→`0`）。**Day 10 的教法实测有效，可复用**：指到他自己写过的 `day08-zerohint-02.js:9`（`result[key] = (result[key] ?? 0) + 1`）—— **同一个动作，只把起点从 `0` 换成 `[]`、把"算新的"从 `+1` 换成"往里放"**，他随后一次写对 |
 
+| **顶层 `await` 与模块格式撞车（第 2 次）** | **9/20–21 第一次**（`day07-promise.js`：顶层 `await` + `module.exports` 并存）；**9/26 第二次**（`week2-runtime/day11-make-big.js`：顶层 `await` + `require` 并存）。两次都是 `ERR_AMBIGUOUS_MODULE_SYNTAX` 家族 | **⚠️ 报错行号会骗人**：9/26 这次错误**指着第 6 行的 `require`**，真因在**第 39 行的顶层 `await`**（Node 先按 CJS 解析失败 → 回退按 ESM 再试 → ESM 里没有 `require`）。**判读口诀：先看错误名，别信行号。** **修法（保持 CJS）：把顶层那几行包进 `async function main(){ … }` 再 `main();`** —— Node 的报错原文里就写着这句（"wrap await in an async function"）|
+| **`await` 漏写在"调用异步函数"的地方** | 9/26 `day11-make-big.js`：`createLargeNDJSON(file)` 没 `await` → 造文件和测量**并发跑**（race）| **调 `async` 函数不 `await` = 拿到一张"票"就往下走**。要"等它做完"就必须 `await`；不确定时问一句"下一步用到它的结果吗？" |
+
+| **判据的"牙"（覆盖 / 假绿）—— 9/27 一天连中两枪** | ① 零提示题 `once` 的判据**没数调用次数** → AI 造的"每次都真跑原函数、只返回第一次结果"的坏实现**照样全绿**；② 他把**最关键的断言注释掉**（`assert.deepEqual(seen[0], …)`）→ "不用 `apply`、`this` 丢掉"的坏实现 **5/5 全绿**（AI 实测两个坏版）| **每条判据都要能说出"它在防哪种坏法"**（说不出 → 多半是多余的）；**"只执行一次 / 不重试"这类要"数行为"**（`assert.equal(calls, 1)`），不能只看"返回值相同"；**注释里写了设计选择，判据里就必须有一条对应它**；**绝对不要靠"注释掉断言"让它变绿**。顺带：9/26 那两条（判据只用题目例子、期望值照实现反推）同族 |
+| **`try` / `catch` 的块作用域**（"接线"族，9/27 第 4 次）| `src/cli.js` 里 `const dir = positionals[0]` 声明在 **`try` 里面** → **`catch` 看不见**（块作用域）→ **catch 自己抛** → 表现为 **02 / 04 / 07 三个红其实是一条**（而 05 空目录能过，因为那条路径不进 catch）| **`catch` 里要用到的变量，必须声明在 `try` 外面**。判读：一次报三条红时先怀疑"是不是同一条根因"—— 看哪条**没过**往往更有信息量（05 能过就说明错误在别的路径）|
+| **"闭包记住状态"族（9/27 第 4 次）** | `debounce` 的 `timer` → `curry` 的累积参数 → `groupBy` 的 `out[key] ?? []` → 今天 `once` 的 `called`。**`once` 是问 AI 才做出来的**，卡点自述很准（"不知道靠什么方式**阻止后面的参数继续输入**"）→ 归类**检索失败**（不是知识缺口）| **不要重讲概念**：指路到他自己写过的 `timer` / 累积参数 → **合上重写一遍** → **紧接着用同族题目再练**（今天的 `p-limit` 核心正是同一个动作）；Day 15 复盘进「忘了的」清单 |
 ### 反馈方式上的三个注意点
 
 - 会主动说"我不会 / 这条我没学过 / 我没实感" —— **这是优点，要鼓励**（知道自己哪块是空的）
@@ -177,12 +183,40 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 
 ---
 
-## 六、下一步（**Day 11 已完成，待提交** → 下次开工 = **Day 12：HTTP 与原生 `http` + 项目 1 启动**）
+## 六、下一步（**Day 13 进行中：只差主线 `p-limit` + 提交** → 下次开工 = **Day 14：包管理与生态 + 项目 1 主体**）
+
+### ⚠️ 新会话开场必做（顺序别换）
+
+1. **先 commit + push**（**最高优先级**）：`f6e6851` 之后**跨了两天、21 个文件全在本地** —— Day 12 的 `cli.js`/README/日志、Day 13 的 `once` + 判据、`tools/check-md-tables.js`、两份任务书… **一个都没进版本库**。
+   建议：`git add -A && git commit -m "day12+13: project1 cli (9/9 dry-run safe) + deepClone/once + table checker"` → 再按 §九 的办法核推送（`git ls-remote --heads origin main` 对比 `git rev-parse HEAD`）。
+2. **`once` 判据的最后一处**：`week2-runtime/day13-zerohint-07-verify.js` **第 50 行的 `assert.deepEqual(seen[0], …)` 被注释掉了** —— 这会让"this 透传"那条变成**假绿**（AI 实测：不用 `apply`、`this` 丢掉的坏实现照样 **5/5 全绿**）→ **取消注释**（AI 已验证：正确实现 **5/5** ✅、坏实现第 3 条**红** ✅）。
+3. **`once` 要"合上重写一遍"** —— 这道是**问 AI 完成的**（记账在 `notes/day13.md` 的 AI 复核 ③），那一遍才算他的；它和下面第 4 件**是同一个动作**（闭包记状态），正好连着做。
+4. **⑤ 主线：裸写 `p-limit`**（`week2-runtime/day13-p-limit.js`）→ 判据 `node --test week2-runtime/day13-p-limit-verify.js`（**8 条：必过 7 + 探针 1**）。关键断言：**最大同时数正好 = n**（> n = 一上来全启动；只有 1 = 写成队列、不是并发池）、**失败隔离**（一个失败其他照跑）、**排队不丢**。判据已负向验证（参照实现全绿；`nocap` / `serial` / `dropqueue` / `killqueue` / `notpromise` 五个变体各红在对的条目）。
+5. ⑥ `fetch` 超时 + 重试（`week2-runtime/day13-fetch.js`）→ 判据 `day13-fetch-verify.js`（**会自己起本地 http server**；`noretry` / `notimeout` / `retryonsuccess` / `swallow` 四个变体已验证会红）—— **可顺延到 Day 14**。
+6. ⑦⑧：补 `notes/day13.md` 的 ⑤⑥⑦ 三格 + commit。
+
+**Day 14 的正课**：上午 包管理与生态（npm/pnpm 差异、语义化版本、lockfile、workspace、`npm audit`、依赖为什么越少越好）；下午 **项目 1 主体**（文件扫描 → 分类 → **真的移动文件**：流式复制 + 校验，正好用上 Day 11 的流）；用 `pnpm` 管理。
+
+**⚠️ 一笔留给 Day 15 的时间账**：项目 1 的 `src/cli.js` 从 Day 12 拖到 Day 13、**改了 4 版**才过（AI 最后走例外条款给了**完整参照版**：在**他的代码基础上**补接线）。根因是**"接线"这一族**（Day 7 五轮、Day 10 两版、这次第 4 次）+ **每天新 API 的密度** → 周复盘要摊开算，别只记"学得慢"。
+
+
+### 存档：Day 12 那次的开场清单（已完成）
+
+**Day 12 材料已就位（9/25 晚由 AI 写好）**：任务书 `notes/day12-http-project1.md`（含时间表 / 验收标准 / 砍单顺序）+ 日志模板 `notes/day12.md` + **项目判据 `projects/p1-cli-organizer/test/cli.test.js`**（AI 已负向验证：参照实现 **9/9 全绿**；9 个"只坏一处"的变体各自红在对的条目 —— 其中 **"干跑却动了文件"→ 02 红**、**"`--apply` 动了文件"→ 03 红** 是两个安全底线）。今天的契约：`src/cli.js` 导出 `classify(fileName)`；CLI `node src/cli.js <源目录> [--target <目录>] [--verbose] [--apply]`；**默认就是干跑、一个文件都不许动**。
 
 **Day 11 结果（逐项实测过）**：① 开场清欠账 ✅（`parseArgs` 默写**三问全答对**；`main()` 重写后判据 **10/10**；④ 实验重做，预测 20/100ms → 实测 18/84ms，异步 1–2ms，**量级对了**）｜② 轮转复习 `debounce` ✅ **4/4**（诊断准确："没进计时器就 return 了导致 callNow 一直为 true"；改完已挪到 `week1-language/`）｜③ 零提示题 `chunk` ✅ 实现符规格 + 判据 **5/5**（中途修掉一处假断言 `assert.notEqual=(...)` → 真调用）｜④ 阅读 15 条 ✅（AI 复核：1 处更正 = **`objectMode` 默认是 `false`**，不是 true）｜⑤ **主线 `day11-ndjson.js` 判据 9/9 全绿 —— 但判不合格**（见下）｜⑥ 内存实测**没做**｜⑦⑧ 待提交。
 **Day 11 的记账（重要）**：主线是 **AI 帮他一起写的**。他本人的原话比 AI 的判断更准：**"我不会流式处理 —— 这份是 AI 帮我一起写的，我只是输入了关键词…只是看懂了代码在干嘛而已。"** ⚠️ **AI 犯过一次错**：曾从"代码跑对了"推出"流式思路是他做的" → **判"哪部分是谁写的"只能问本人，不能从代码风格猜**（详见 `notes/day11.md` 的 AI 复核）。
 
-### ⚠️ Day 12 开场必做三件
+### ⚠️ Day 13 开场必做（**先清 Day 12 的尾巴**，约 1 小时 —— 学生自评"明天早上应该写得很快"，因为他骨架已经想清；但**这笔时间是从 Day 13 借的**，Day 15 复盘要算）
+
+1. **写 `projects/p1-cli-organizer/src/cli.js`**：
+   - `classify`：**表**（`[组名, [扩展名...]]` 或对象） + `path.extname(name).toLowerCase()` + 循环外兜底 `others`（他今天已学会这个结构：判据 01 的 13 个样本里 `photo.JPG` 考大小写、`README` 考兜底）
+   - `main`：`parseArgs`（`--target` string / `--verbose` boolean / `--apply` boolean + `allowPositionals: true`）；**默认干跑 = 只打印**（**不许出现 `rename`/`rm`/`unlink`/`mkdir`**）；汇总固定格式 `共 N 个文件：images X、docs Y、videos Z、others W`（顺序固定，要一个四键计数对象）；目录不存在 → try/catch + 非零退出码；`require.main` 守卫 + `module.exports = { classify }`
+   - 判据：`node --test projects/p1-cli-organizer/test/cli.test.js` → **9 条全绿**（02/03 会**快照对比**确认"干跑 / `--apply` 都没动文件"）
+2. **README 5 处小改**：表格 `videos` 行缺收尾 `|`（`node tools/check-md-tables.js projects/p1-cli-organizer/README.md` 会点名第 22 行）、`readir`→`readdir`、`如何文件`→`任何`、**把"流式"从「为什么用异步 API」那条里删掉**（`readdir`/`stat` = 异步不阻塞；流式 = `createReadStream` 省内存，两件事）、已知限制写了"**递归**" → **代码就得真的递归**（探针会记录，两种都行，但**文档与代码必须一致**）
+3. **补 `notes/day12.md` 的 ⑥⑦⑧ + commit + push**（顺延项进欠账表）
+4. 然后走 **Day 13 正课**：`fetch`（undici）/ 超时 / `AbortController` / 重试（指数退避）/ 并发控制 → **裸写 `p-limit`** + 给 `fetch` 加超时 + 重试 + 日志封装
+### ⚠️ Day 12 开场必做三件（**已完成，存档**）
 
 1. **合上重写 `week2-runtime/day11-ndjson.js`**（**整读版 + 流式版两个 `summarize`**，不是只改接线）—— 昨天那份是 AI 帮他写的；**允许查他自己的日志 / MDN**（不算默写），判据现成：`node --test week2-runtime/day11-ndjson-verify.js`，目标 **9/9**。这是"我到底会不会流式"的**唯一判据**。
 2. **默写两个模式**（各 5 分钟，盖住材料）：① **流式逐行** = `for await (const chunk of stream)` + `leftover` 拼接 + 循环结束后处理残行；② **`parseArgs` 框架**（昨天答对了，隔天再验一次，看是否真的记住）。
@@ -263,7 +297,8 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 
 **TypeScript / 工具链**
 - `pnpm add -D typescript @types/node` —— **`@types/node` 必须装**，否则 `require` / `module` 报 `Cannot find name`。
-- **判据/脚手架放在 `test/` 目录外，就不会被 `node --test` 自动发现**（9/24 实测：在仓库根跑 `node --test` 只找到工具箱那 **27** 条，`week2-runtime/*-verify.js` 不参与）→ 所以「把当天的判据提前写好」**不会**把全绿的套搞红；"别提前写测试"那条规矩只对 `p0-toolkit/test/` 成立。
+- **判据/脚手架放在 `test/` 目录外，就不会被 `node --test` 自动发现**（9/24 实测：在仓库根跑 `node --test` 只找到工具箱那 **27** 条，`week2-runtime/*-verify.js` 不参与）→ 所以「把当天的判据提前写好」**不会**把全绿的套搞红；"别提前写测试"那条规矩只对 `test/` 目录成立。
+- ⚠️ **修正（9/26 起）：`projects/*/test/` 会被自动发现** —— 仓库根 `node --test` 现在找到 **36 条**（工具箱 27 + `projects/p1-cli-organizer/test/cli.test.js` 的 9 条），而 p1 那条判据在 `src/cli.js` 写出来之前**会红 1 条**（**这是设计如此：判据就是待办清单**，不是环境坏了）。**想查"工具箱基线"请用 `cd week1-language/p0-toolkit && pnpm test`（27 条全绿）。**
 - **TS 7.0.2 删掉了 `moduleResolution: "node"`**（报 `TS5108`）→ `tsconfig.json` 用 `module: "nodenext"` + `allowImportingTsExtensions: true` + `types: ["node"]`。
 - `node 文件.ts` **能直接跑**（Node 24 类型剥离）；`node --test` **会自动发现 `*.test.ts`**；`require('../src/x.ts')` 也能用 → **不需要 Vitest / tsx**（Vitest 挪到第 3 周）。
 - 递归函数报 `TS7023` / `TS7024` 时要**显式写返回类型**；"递归藏在回调里"才报，纯自递归 `return f(x)` 反而不报；断环写在外层或内层**任一**都行。
@@ -284,6 +319,7 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 | `week1-language/p0-toolkit/` | 5 个模块（`debounce` / `throttle` / `curry` / `deepClone` / `arrayUtils`）+ **27 条测试**，**已转 TS（strict）** | `pnpm test`、`pnpm exec tsc --noEmit` 都零错 |
 | `week1-language/recall-verify.js` | **轮转复习器**：`node recall-verify.js <模块> [你的稿子路径]` | 用工具箱测试当判据；**已适配 `.ts`**；**支持显式传路径**（四个函数写一个文件也能判）；带"防假绿守卫"（0 条 `test()` → 报"这个绿不算数"）。**9/24 修两处**：① 诊断分支用 `require(相对路径)` → 按**工具自己的目录**解析，显式传路径时误报"你的文件加载不了"（已 `path.resolve`）；② 提示里写死 `.js`，工具箱转 TS 后会指向不存在的文件 → 改成按实际存在的 `.ts`/`.js` 取 |
 | `week1-language/day07-recall-verify.js` | debounce 专项复习脚手架（6 项行为检查） | 默认读 `day07-recall-debounce.js` |
+| `tools/check-md-tables.js` | **Markdown 表格自检**：`node tools/check-md-tables.js [文件…]`（不给参数就查 `notes/*.md`）| 抓四类毛病：**① 格子数和表头对不上 ② 内容塞在分隔行 `\|---\|` 后面 ③ 4 空格缩进（会被渲染成代码块）④ 缺分隔行**；**会忽略转义竖线 `\|`（不冤枉）**，退出码非 0 可直接接进脚本。**2026-09-26 加** —— 起因是表格串列反复出现（Day 9 的 3 行、Day 12 的 17 行都是它抓出来的）。**写完日志跑一下** |
 | `week1-language/day09-zerohint-03-verify.js` | 零提示题第 3 道的判据（**他自己写的**） | 4/4 |
 | `week1-language/recall-curry,debounce,deepClone,throttle.js` | 他的 recall 合并稿（逗号文件名） | 用 `recall-verify.js <模块> "<该路径>"` 判 |
 | `notes/ts-cheatsheet.md` | TS 类型速查表（六节，含"大写 vs 小写"） | 卡住先查表；**用法是默写，不是重读** |

@@ -187,9 +187,9 @@
 
 | 实验 | 我的预测 | 实测 | 一致？ |
 |---|---|---|---|
-| 1. 主模块里 `setTimeout(0)` vs `setImmediate` | | | |setTimmediate要快于setTimout(0);2次输出“B setImmediate”快于“AsetTimeout 0”一次“AsetTimeout 0”快于“B setImmediate”而且是位于首次.|不一致|
-| 2. **I/O 回调里** `setTimeout(0)` vs `setImmediate` | | | |setTimeout(0)慢于setImmediate|etTimeout(0)慢于setImmediate|一致
-| 3. 同步 → `nextTick` → `then` → `setTimeout` | | | | 顺序为15432 |1.同步5.同步结束4.nextTick3then2setTimeout|一致
+| 1. 主模块里 `setTimeout(0)` vs `setImmediate` | setTimmediate要快于setTimout(0);2次输出“B setImmediate”快于“AsetTimeout 0”一次“AsetTimeout 0”快于“B setImmediate”而且是位于首次. |  | 不一致 |
+| 2. **I/O 回调里** `setTimeout(0)` vs `setImmediate` | setTimeout(0)慢于setImmediate |  | etTimeout(0)慢于setImmediate |
+| 3. 同步 → `nextTick` → `then` → `setTimeout` | 顺序为15432 |  | 1.同步5.同步结束4.nextTick3then2setTimeout |
 | 4. 同步 I/O 会把 `setTimeout(0)` 推迟多久 | | | |
 4.a301ms以后4.b1ms|300ms以后 1ms以后|一致
 **实验 2 要能解释**（用我自己的话）：为什么在 I/O 回调里 `setImmediate` 一定先？

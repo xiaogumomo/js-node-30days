@@ -132,6 +132,28 @@ fs.writeFileSync(emptyFile, '', 'utf8');
 const blankFile = path.join(labRoot, 'blank.ndjson');
 fs.writeFileSync(blankFile, '\n\n\n', 'utf8');
 
+// ⚠️ 多块 fixture（08 用）：默认 highWaterMark 是 64KB，所以**必须 > 64KB** 才会被切成多块。
+//    小文件只有一块 → "残行(leftover)处理"放错位置也照样对；大文件才暴露。
+//    ⚠️ 而且**每行长度必须不一样**：如果行长固定、块边界又恰好落在换行上（我第一版就踩了这个），
+//       每块的 leftover 都是空的，那个 bug 依然考不出来 → 08 里会用"自检"确认这一点。
+const N_LINES = 8000;
+let multiText = '';
+for (let i = 0; i < N_LINES; i++) {
+  multiText += `{"id":${i},"pad":"${'x'.repeat(i % 23)}"}\n`; // ok：行长随 i 变化
+  if (i % 5 === 4) multiText += `oops ${i}\n`; // bad
+  if (i % 7 === 6) multiText += '\n'; // 空行（不算）
+}
+const multiFile = path.join(labRoot, 'multi.ndjson');
+fs.writeFileSync(multiFile, multiText, 'utf8');
+const MULTI_EXPECTED = {
+  lines: N_LINES + Math.floor(N_LINES / 5), // 有内容的行 = ok + bad
+  ok: N_LINES,
+  bad: Math.floor(N_LINES / 5),
+  bytes: fs.statSync(multiFile).size,
+};
+assert.ok(MULTI_EXPECTED.bytes > 64 * 1024, '判据自己的多块 fixture 太小，切不成多块');
+assert.strictEqual(MULTI_EXPECTED.ok + MULTI_EXPECTED.bad, MULTI_EXPECTED.lines, '判据自己把多块 fixture 数错了');
+
 let cleaned = false;
 function cleanup() {
   if (cleaned) return;
@@ -147,7 +169,7 @@ process.on('exit', cleanup);
 
 after(() => {
   console.log(
-    '\n判据覆盖面：00–07 共 8 条必过 + P 探针 1 条 = 本文件 9 条 test()。\n' +
+    '\n判据覆盖面：00–08 共 9 条必过 + P 探针 1 条 = 本文件 10 条 test()。\n' +
       '（这就是那个「绿」的含金量 —— 报绿之前看一眼上面的 pass 数：\n' +
       '  如果大半是 skipped、pass 只有个位数，那不是绿，是没跑起来。）'
   );
@@ -253,6 +275,44 @@ test('07 模块能被 require 而不会顺手把 CLI 入口跑起来', () => {
     !guardProblem,
     moduleTrouble() + `\n    （实测：require 它时退出码 ${probeRequire.status}，输出：${JSON.stringify(probeOut.trim().slice(0, 200))}）`
   );
+});
+
+test('08 大文件（会被切成【多块】）也要数对 —— 小文件只有一块，藏得住切行的 bug', { skip }, async () => {
+  // 先自检：这份 fixture 必须真的出现过"块边界落在行中间"（否则这一条考不出那个 bug）
+  {
+    let sawPartial = false;
+    let leftover = '';
+    const rs = fs.createReadStream(multiFile, { encoding: 'utf8' });
+    for await (const c of rs) {
+      const parts = (leftover + c).split('\n');
+      leftover = parts.pop();
+      if (leftover.length > 0) sawPartial = true;
+    }
+    assert.ok(sawPartial, '判据自己的多块 fixture 有问题（块尾从没出现半截行）→ 换一份 fixture 再来考');
+  }
+
+  const got = await summarize(multiFile);
+  const hints = [];
+  if (asNum(got.lines) > MULTI_EXPECTED.lines) {
+    hints.push(
+      '   · 多算了 → 大概率是"残行（leftover）"的处理**写在了 chunk 循环里面**：每收到一块就把这半截行当成一整行，\n' +
+        '     所以"每块多一笔"。它必须在 **for await 循环【外面】**，整份文件只处理一次。'
+    );
+  }
+  if (asNum(got.lines) < MULTI_EXPECTED.lines) {
+    hints.push('   · 少算了 → 检查块与块之间的拼接：下一块必须接上"上一块的残行"（`leftover + chunk`），别把它丢了');
+  }
+  if (asNum(got.ok) > MULTI_EXPECTED.ok) {
+    hints.push('   · ok 虚高 → 半截 JSON 被当成独立的一行去 parse 了（有的碎片凑巧能 parse 成功）');
+  }
+  const tail = hints.length ? `\n${hints.join('\n')}` : '';
+  assert.strictEqual(
+    asNum(got.lines),
+    MULTI_EXPECTED.lines,
+    `这个文件有 ${MULTI_EXPECTED.bytes} 字节（>64KB，会被切成多块），lines 应该是 ${MULTI_EXPECTED.lines}，你给的是 ${got.lines}${tail}`
+  );
+  assert.strictEqual(asNum(got.ok), MULTI_EXPECTED.ok, `ok 应该是 ${MULTI_EXPECTED.ok}，你给的是 ${got.ok}${tail}`);
+  assert.strictEqual(asNum(got.bad), MULTI_EXPECTED.bad, `bad 应该是 ${MULTI_EXPECTED.bad}，你给的是 ${got.bad}${tail}`);
 });
 
 // ─────────────────────────────────────────────────────────────
