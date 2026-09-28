@@ -120,13 +120,28 @@ test('00 模块能被 require，并导出 pLimit 函数', () => {
   assert.strictEqual(typeof pLimit, 'function', moduleTrouble());
 });
 
-test('01 pLimit(n) 返回函数；limit(taskFn) 返回 Promise（结果是 taskFn 的返回值）', { skip }, async () => {
+test('01 pLimit(n) 返回函数；limit(taskFn) 返回 Promise（结果是 taskFn 的返回值）', { skip, timeout: 15000 }, async () => {
   const limit = pLimit(2);
   assert.strictEqual(typeof limit, 'function', 'pLimit(n) 应该返回一个函数（那个 limit）');
   const p = limit(() => 42);
   assert.ok(p && typeof p.then === 'function', 'limit(taskFn) 要返回 Promise（后面要靠 Promise.all 收结果）');
-  const v = await p;
-  assert.strictEqual(v, 42, 'Promise 的结果应该是 taskFn 的返回值');
+
+  // ⚠️ 这里必须带超时：如果 limit() 的 promise 永远不结算，`await p` 会把**整个 test runner 挂死**
+  //    （不是报一条红，是卡住 —— 那样你看不出是哪条、也不知道为什么）。
+  //    2026-09-28 实测踩到过：队列"存进去的形状"和"取出来的形状"对不上 → resolve 永远没被调用。
+  const settled = await Promise.race([
+    p.then((v) => ({ v }), (e) => ({ e })),
+    sleep(2000).then(() => null),
+  ]);
+  assert.ok(
+    settled,
+    '`limit(taskFn)` 返回的 promise **一直没结算**（既没 resolve 也没 reject，等了 2 秒）。\n' +
+      '   最常见的两种原因，都在「存进去的东西」和「取出来的东西」之间：\n' +
+      '   ① **形状对不上**：往队列里存的、和 shift 出来之后解构的，必须是同一种形状（存一个对象就按对象解构）\n' +
+      '   ② **`resolve` 从来没被调用**：检查那句"执行任务"是不是把函数**调用**了 —— `() => fn` 和 `() => fn()` 差一对括号'
+  );
+  assert.ok(!settled.e, `limit(taskFn) 不该 reject（这个 taskFn 是成功的）—— 实际抛了：${settled.e && settled.e.message}`);
+  assert.strictEqual(settled.v, 42, 'Promise 的结果应该是 taskFn 的返回值');
 });
 
 test('02 同时最多 n 个（n=2 时 peak 必须正好是 2）', { skip, timeout: 10000 }, async () => {

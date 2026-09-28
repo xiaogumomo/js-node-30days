@@ -45,6 +45,22 @@
 
 **砍单顺序（从下往上砍，砍掉的进日志"欠账登记"）**：`fetch` 的第 ④ 块（分类设计）→ 零提示题的"第二遍" → 上午正课的动手项 →（**不许砍**）两道**重写**（`once` / `p-limit`）、项目 `--apply` 的判据、日志。
 
+**⚠️ 今天的量偏大（表上约 5 小时 20 分，而你历史上的每一天都超时）→ 先认下"最小集"**（计划 §四「选 A」：宁可砍内容，也不许把清单摊薄）：
+
+| 保底（不许砍） | 用时 | 可顺延（记账即可） |
+|---|---|---|
+| **0c** `once` 合上重写 → 5/5 | 10 分 | 0b `fetch` 分块练的第 ①②③ 块 |
+| **0a** `p-limit` 合上重写（第二遍）→ 8/8 | 20 分 | 零提示题第 8 道 `memoize` |
+| **0d** 补日志 4 格 + 提交 | 15 分 | 包管理的**阅读** 4 条（"动手"那步要留）|
+| **项目 `--apply`** → `apply.test.js` 9/9 | 90 分 | 轮转复习（只有 5 分钟，尽量别砍）|
+| **README 跟上代码**（3 处）| 20 分 | —— |
+| **日志 + commit + push** | 15 分 | —— |
+| **合计** | **约 2 小时 50 分** | |
+
+**今天有一件事不许只做一半**：`--apply` 要**真的能搬**（明天 Day 15 晚上就是**项目 1 的交付检查**，见计划书 §四）。
+**如果今天有课**：能切到课间做的只有"包管理阅读"和"零提示题"，其余都要电脑。
+
+
 ---
 
 ## 二 上半场：清 Day 13 的尾巴（别欠，约 1 小时 10 分）
@@ -75,6 +91,9 @@ node --test week2-runtime/day13-zerohint-07-verify.js     # 目标 5/5
 | 不许看 | **你自己那份 `week2-runtime/day13-p-limit.js`**（合上它）、也不许问 AI |
 | 判据 | `node --test week2-runtime/day13-p-limit-verify.js` → 目标 **8/8**（现成的，一个字都不用改）|
 | 产出 | 覆盖写回 `week2-runtime/day13-p-limit.js`（9/27 那版已经在 git 历史里，重写时对照得回来）|
+
+> ⚠️ **先从"0c `once` 那次"学一条**（9/28 实测发现）：他重写 `once` 时，**上一版还留在同一个文件里当注释** → 新代码和旧版逻辑完全一样 → **那一遍就不算"关着写"**。
+> **所以这一遍请先做一件事：把 `day13-p-limit.js` 清空**（只留题头），**从零写**；旧版想看就去 git：`git show 08cddb1:week2-runtime/day13-p-limit.js`。**不要在同一个文件里留旧版注释。**
 
 **指路（只给"去哪儿找"，不给代码）**：
 - **"票据"**：你自己写过 `week1-language/day07-promise.js:34` 的 `buyfood` —— 那里 `resolve` 是**交给别人**（定时器）、**过 3 秒才被调用**的。今天只要把"定时器"换成"队列 + 调度器"。
@@ -124,20 +143,30 @@ node --test week2-runtime/day13-zerohint-07-verify.js     # 目标 5/5
 **AI 9/27 的负向验证**：参照实现 **8/8**；不重试 → 红在 `02 04`；不超时 → 红在 `03`；成功也重试 → 红在 `01 02 04 05`；全失败吞掉 → 红在 `02 03 05`。
 **另外**：把"fetch 封装（最小版）"加进**第 3 周的轮转表**（判据现成，正好当复习）。
 
-### 0d `notes/day13.md` 的 ⑤⑥⑦ + commit（15 分钟）
+### 0d 补 `notes/day13.md` 的收尾格子 + commit（15 分钟）
 
-⑤⑥ 那两张表如实填（**卡在哪**比"做出来了"值钱）。提交前：
+⚠️ **9/27 收工时漏了 4 个格子**（AI 9/28 早上核对时发现：勾选 0 条、欠账表还是占位符）。**先补这 4 处**，再提交：
+
+| # | 补什么 |
+|---|---|
+| 1 | **今日目标**那 8 个 `[ ]` 打勾（⑤⑥ 可以标"AI 辅助"）|
+| 2 | **今日产出**表的状态列：`⬜` → `✅`（`p-limit` / `fetch` 两行注明"AI 辅助版"）|
+| 3 | **⑤ 的「实测输出」**还是模板那句话 → 跑一次贴真实输出：`node --test week2-runtime/day13-p-limit-verify.js` |
+| 4 | **欠账登记**表 → 填三条真欠账：`p-limit` 合上重写（今天开场）、`once` 合上重写（今天开场）、`fetch` 分块练 4 块（今天 0b）+ 整份重写（Day 15/16）|
+
+⑤⑥ 那两张表你已经填过了（每行都写了"实现（ai帮我完成的）"—— 这个如实记法是对的）。
 
 ```powershell
 node tools/check-md-tables.js           # 表格串列自检（写完日志就顺手跑）
-git status -sb                          # ⚠️ 今天重点看：有没有多出不该提交的文件
+git status -sb                          # ⚠️ 重点看：有没有多出不该提交的文件
 git add -A
-git commit -m "day13+14: p-limit pool + fetch retry + project1 apply (streaming copy, verified)"
+git commit -m "day13: log wrap-up + handoff status"
 git push
 git ls-remote --heads origin main       # 和 git rev-parse HEAD 比 SHA
 ```
 
-⚠️ **`git add -A` 前扫一眼 `git status`**：昨天 `projects/p1-cli-organizer/test/cli.js` 就是这么被扫进去的（一份放错目录的实现，还让根目录的 `node --test` 多出一条**幽灵通过**）。
+⚠️ **`git add -A` 前扫一眼 `git status`**：9/27 `projects/p1-cli-organizer/test/cli.js` 就是这么被扫进去的（一份放错目录的实现，还让根目录的 `node --test` 多出一条**幽灵通过**）。
+⚠️ **`notes/HANDOFF.md` 有两处是 AI 9/27 收工后改的**（⑧ 标成已完成 + 记上推送号 `08cddb1`）→ **一起提交掉**，不然交接文档里会留着"⑧ 未做"的过期状态。
 
 ---
 
@@ -181,12 +210,14 @@ node week1-language/recall-verify.js throttle   # 判你的稿子
 | 3 | [pnpm `pnpm-lock.yaml`](https://pnpm.io/settings#lockfile) / npm 的 lockfile 文档 | lockfile 是干什么的、**为什么必须提交进 Git**、没有它会怎样（同一份 `package.json` 装出两套依赖）|
 | 4 | [npm audit 文档](https://docs.npmjs.com/cli/v10/commands/npm-audit) + 任意一篇"为什么依赖越少越好" | 一个依赖 = 多少你没读过的代码；`postinstall` 脚本能干什么；**供应链攻击**是怎么进来的 |
 
-**动手 5 步（30 分钟，**必须有能跑的东西**）：
+**动手 5 步（30 分钟，必须有能跑的东西）**：
 
 ```powershell
 cd projects/p1-cli-organizer
-pnpm init                       # 建 package.json，改 name/description/type/engines
+pnpm init                       # 建 package.json
+pnpm pkg set name="p1-cli-organizer" private=true description="批量文件整理 CLI（项目 1）"
 pnpm pkg set scripts.test="node --test test/"        # 判据接进 scripts
+pnpm pkg get type               # ← ⚠️ 为了看清：type 是 undefined（= CJS），不是 "module"
 pnpm test                       # ← 今天要亲眼看到"判据 = 待办清单"（apply 那 6 条红）
 pnpm add -D picocolors          # 故意装一个小依赖：看 package.json / pnpm-lock.yaml 各多了什么
 pnpm remove picocolors          # 再删掉：看 lockfile 又变回去（顺手体会"依赖最小化"）
@@ -194,10 +225,17 @@ pnpm audit                      # 读一遍输出（0 vulnerabilities 也要会�
 pnpm list --depth=0             # 现在到底装了什么
 ```
 
-**写进日志的 4 行**（不要抄文档）：① pnpm 和 npm 最实质的差别是什么；② 你在 `package.json` 里为什么这么写 `type` / `engines`；③ lockfile 变化前后你看到了什么；④ "幽灵依赖"用一个例子说清（npm 下 `pnpm add -D picocolors` 之后，能不能 `require` 一个没写进 `package.json` 的包？）。
+> ⚠️⚠️ **今天最可能炸的一处：`package.json` 的 `type` 字段。**
+> 这个项目**全是 CommonJS**（`require` / `module.exports` —— `src/cli.js` 和两个 `.test.js` 都是）。
+> **`type` 一旦写成 `"module"`，这些文件全部当场失效**（`require is not defined`），判据一条都跑不起来，**而报错会指向"某个函数没定义"，看不出真因在 package.json**。
+> ✅ **正确做法：不写 `type`（删掉），或显式写 `"type": "commonjs"`** —— 参照 `week1-language/p0-toolkit/package.json`（它压根没有 `type` 字段）。
+> 写完**立刻验一次**：`pnpm test` 应该是"3 通过 / 6 红（`--apply` 待办）"；若变成 `require is not defined` 一类，先回去看 `pnpm pkg get type`。
+
+**写进日志的 4 行**（不要抄文档）：① pnpm 和 npm 最实质的差别是什么；② 你在 `package.json` 里为什么这么写（`private` / `test` script / **为什么不写 `type`**）；③ lockfile 变化前后你看到了什么；④ "幽灵依赖"用一个例子说清（`pnpm add -D picocolors` 之后，能不能 `require` 一个没写进 `package.json` 的包？）。
 
 > ⚠️ **`pnpm init` 之后 `pnpm test` 会红**（`apply.test.js` 的 6 条）—— **这是设计如此，判据就是待办清单**，不是环境坏了。等你写完 `--apply` 它会变绿。
 > 仓库根的 `node --test` 现在一共 **45 条**（工具箱 27 + 项目 18），红 6 条全是 `--apply` 的待办。
+> **没网也能做**：把 `add / remove / audit` 三步划掉，只做 `init` + `pkg set` + `pnpm test` + `pnpm list`（其余顺延，记账）。
 
 ---
 
@@ -208,6 +246,8 @@ pnpm list --depth=0             # 现在到底装了什么
 ```
 node src/cli.js <源目录> [--target <目标目录>] [--verbose] [--apply]
 ```
+
+⚠️ **只有这三个选项**（`--target` string / `--verbose` boolean / `--apply` boolean）—— **不要新增 `--dry-run`**：这个工具的契约是"**默认就是干跑**"，加了这个 flag 会和判据的选项契约打架。（计划书 §四 Day 15 那行写着"`--dry-run` 模式"，那是旧措辞，别照它加。)
 
 - **不加 `--apply` = 干跑，一个文件都不许动**（连目录都不许建）—— 这条判据已经盯着了（`cli.test.js` 的 03）。
 - **加了 `--apply`**，每个文件走**四步，顺序不能反**：

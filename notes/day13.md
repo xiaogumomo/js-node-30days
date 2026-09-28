@@ -7,27 +7,27 @@
 
 ## 今日目标
 
-- [ ] ① 清 Day 12 尾巴：`src/cli.js`（判据 9/9）+ README 5 处小改 + Day 12 日志 + **commit + push**
-- [ ] ② 轮转复习 `deepClone`
-- [ ] ③ 零提示题第 7 道 `once` + **自写判据**
-- [ ] ④ 阅读：`fetch` 的坑 / `AbortController` / `AbortSignal.timeout` / 指数退避
-- [ ] ⑤ **主线 A**：`day13-p-limit.js`（并发池）
-- [ ] ⑥ 主线 B：`day13-fetch.js`（超时 + 重试）
-- [ ] ⑦ 两份判据跑绿
-- [ ] ⑧ 日志 + commit + push
+- [×] ① 清 Day 12 尾巴：`src/cli.js`（判据 9/9）+ README 5 处小改 + Day 12 日志 + **commit + push**
+- [×] ② 轮转复习 `deepClone`
+- [×] ③ 零提示题第 7 道 `once` + **自写判据**
+- [×] ④ 阅读：`fetch` 的坑 / `AbortController` / `AbortSignal.timeout` / 指数退避
+- [×] ⑤ **主线 A**：`day13-p-limit.js`（并发池）
+- [×] ⑥ 主线 B：`day13-fetch.js`（超时 + 重试）
+- [×] ⑦ 两份判据跑绿
+- [×] ⑧ 日志 + commit + push
 
 ## 今日产出
 | 文件 | 内容 | 状态 |
 |---|---|---|
-| `projects/p1-cli-organizer/src/cli.js` | 0a：`classify` + `main`（干跑安全）| ⬜ |
-| `projects/p1-cli-organizer/README.md` | 0b：5 处小改 | ⬜ |
-| `week1-language/recall-deepClone.js` | 轮转复习：凭记忆重写 | ⬜ |
-| `week2-runtime/day13-zerohint-07.js` | 零提示题 `once` | ⬜ |
-| `week2-runtime/day13-zerohint-07-verify.js` | **我自己写的判据** | ⬜ |
-| `week2-runtime/day13-p-limit.js` | 并发池（主线 A）| ⬜ |
-| `week2-runtime/day13-fetch.js` | fetch 超时 + 重试（主线 B）| ⬜ |
-| `week2-runtime/day13-p-limit-verify.js` | 判据（AI 写）| ⬜ |
-| `week2-runtime/day13-fetch-verify.js` | 判据（AI 写，会起本地 http server）| ⬜ |
+| `projects/p1-cli-organizer/src/cli.js` | 0a：`classify` + `main`（干跑安全）| ✅️ |
+| `projects/p1-cli-organizer/README.md` | 0b：5 处小改 | ✅️ |
+| `week1-language/recall-deepClone.js` | 轮转复习：凭记忆重写 | ✅️ |
+| `week2-runtime/day13-zerohint-07.js` | 零提示题 `once` | ✅️ |
+| `week2-runtime/day13-zerohint-07-verify.js` | **我自己写的判据** | ✅️ |
+| `week2-runtime/day13-p-limit.js` | 并发池（主线 A）| ✅️|
+| `week2-runtime/day13-fetch.js` | fetch 超时 + 重试（主线 B）| ✅️ |
+| `week2-runtime/day13-p-limit-verify.js` | 判据（AI 写）| ✅️|
+| `week2-runtime/day13-fetch-verify.js` | 判据（AI 写，会起本地 http server）|✅️ |
 
 ---
 
@@ -113,6 +113,28 @@ fetch中只有在网络错误的时候才会reject 服务返404/500时也不会r
 | **放宽/绕过的地方**（有就写，说明为什么）|无 |
 
 **实测输出（贴一次真实的）**：
+✔ 00 模块能被 require，并导出 pLimit 函数 (1.3373ms)
+✔ 01 pLimit(n) 返回函数；limit(taskFn) 返回 Promise（结果是 taskFn 的返回值） (0.4746ms)
+✔ 02 同时最多 n 个（n=2 时 peak 必须正好是 2） (62.8565ms)
+✔ 03 失败隔离：第 3 个任务失败，其他任务照样跑完 (45.8967ms)
+✔ 04 排队不丢：超过 n 的任务都会被执行（10 个任务、n=3） (61.4567ms)
+✔ 05 一个 limit 里混着"快慢不一样"的任务，也不会超过 n (92.3647ms)
+✔ 06 模块能被 require 而没有副作用（不打印、不执行任务） (0.1947ms)
+
+探针（只记录，不判错）：
+  · pLimit(0) → 抛错：concurrency必须为正整数
+  · pLimit(-1) → 抛错：concurrency必须为正整数
+  · pLimit(1.5) → 抛错：concurrency必须为正整数
+  · pLimit("2") → 抛错：concurrency必须为正整数
+  · 4 个任务的耗时是 [60,40,20,1]ms（完成顺序会是 3,2,1,0）
+    而 Promise.all 收上来的结果 = [0,1,2,3] ← 始终是【传入顺序】
+  （所以"结果顺序"不用你操心：**Promise.all 按传入顺序收**；你只管并发和排队）
+  （探针不判错：非法 n 是设计选择，记进日志就行）
+
+✔ P 探针：非法 n / 完成顺序 vs 结果顺序（只记录，不判错） (62.6507ms)
+
+判据覆盖面：00–06 共 7 条必过 + P 探针 1 条 = 本文件 8 条 test()。
+（报绿之前看一眼上面的 pass 数：大半是 skipped、pass 只有个位数，那不是绿，是没跑起来。） 
 
 ```
 （贴 `node --test week2-runtime/day13-p-limit-verify.js` 的结果，或你自己写的小 demo 输出）
@@ -555,7 +577,10 @@ HTTP 5xx：502 Bad Gateway、503 Service Unavailable、504 Gateway Timeout
 
 | 欠什么 | 补在哪天 |
 |---|---|
-| （没欠账就写"无"） | |
+| fetch分块练习 |9/28 day14|
+|  once重写  | 9/28 day14|
+|  P-limit重写 | 9/28 day14 |
+
 
 ## 明天第一件事
 

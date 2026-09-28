@@ -1,5 +1,5 @@
 
-class HttpError extends Error {
+class HttpError extends Error {//在Error中加入Httperror错误
     constructor(status,message){
         super(message ?? `HTTP ${status}`);
         this.name ='HttpError';
@@ -31,28 +31,28 @@ async function fetchWithRetry(url, options = {}) {
   if (!Number.isInteger(retries) || retries < 0) {
     throw new TypeError('retries 必须是非负整数');
   }
-  if (timeoutMs <= 0) throw new TypeError('timeoutMs 必须 > 0');
+  if (timeoutMs <= 0) throw new TypeError('timeoutMs 必须 > 0');//防御性编程，参数写错立马报错
 
-  let lastError;
-  const totalAttempts = retries + 1;
+  let lastError;//作用：记住最后一次失败原因
+  const totalAttempts = retries + 1;//定义的三次重试机会，一共3+1四次请求
 
   for (let attempt = 0; attempt < totalAttempts; attempt++) {
-    // 第 k 次重试前等 baseDelayMs * 2^(k-1)；attempt=0 是首次，不等待
+    // 第 k 次重试前等 baseDelayMs * 2^(k-1)；attempt=0 是首次，不等待 退避等待的实现代码
     if (attempt > 0) {
       await sleep(baseDelayMs * 2 ** (attempt - 1));
     }
-
+    //定义一个异步任务取消协议和定时器，时间一到就主动abort停止
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
+    
+    try {//发送请求并清除定时器
       const res = await fetch(url, {
         ...fetchOptions,
-        signal: controller.signal,
+        signal: controller.signal,//signal作用用于取消请求，直接覆盖防止调用方传别的signal
       });
-      clearTimeout(timer);
+      clearTimeout(timer);//如果成功取消定时器，延时5s后触发定时器直接停止，白等
 
-      const status = res.status;
+      const status = res.status;//将发生错误的状态码存入status
 
       // 成功：2xx → 直接返回，不重试
       if (status >= 200 && status < 300) {
