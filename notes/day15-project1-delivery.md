@@ -12,7 +12,7 @@
 
 | # | 产出物 | 验收标准 | 谁写 |
 |---|---|---|---|
-| 0a | `notes/day13.md` 4 格 + `notes/day14.md` 全篇 + memoize 记账 | 表格自检过 + **提交推送** | **你（课间就能做）** |
+| 0a | **只剩 `notes/day14.md` 全篇** + `memoize` 实现 + 记账 | 表格自检过 + **提交推送** | **你（课间就能做）** |
 | 0b | `projects/p1-cli-organizer/package.json` | `pnpm init` + scripts；`pnpm pkg get type` 是 `undefined`（**CJS**）| **你** |
 | 0c | **`src/cli.js` 的 `--apply`** | `node --test projects/p1-cli-organizer/test/apply.test.js` → **9/9** | **你**（判据 AI 写）|
 | 0d | 项目收尾：错误分类 + `pino` 日志 + 优雅退出 | 三类错误场景各跑一次，报错带文件名、退出码非零 | **你** |
@@ -44,13 +44,10 @@
 
 ### 0a 清日志欠账（30 分钟，**先做**）
 
-**`notes/day13.md`（9/28 核对时发现漏了 4 格）**：
-1. 今日目标的 8 个 `[ ]` 打勾（⑤⑥ 标"AI 辅助"）
-2. 今日产出表状态列 `⬜` → `✅`
-3. ⑤ 的「实测输出」还留着模板那句话 → 跑一次贴真实输出：`node --test week2-runtime/day13-p-limit-verify.js`
-4. 欠账登记表填三条：`p-limit` 重写（已做）、`once` 重写（已做）、`fetch` 分块练 + 整份重写（Day 15/16）
+**`notes/day13.md`（9/27 的 4 格）** —— ✅ **9/28 晚已补完并进提交 `7ec0ff8`**（AI 9/29 早上核对过：8 条勾选、产出状态列、⑤ 的实测输出真的贴了判据输出、欠账表三条真欠账）。**不用重做**。
+（小瑕疵：勾选写成了 `- [×]`，中划线那个 `×`（U+00D7）在 Markdown 里**不会渲染成打勾框** → 下次用 `- [x]`（英文 x）就行。）
 
-**`notes/day14.md`（今天的账）**：
+**`notes/day14.md`（9/28 的账）← 今天要补的就是这个**：
 1. 今日目标勾选 + 今日产出表状态
 2. ① 清尾巴那格（`once` **5/5**、`p-limit` **8/8**、**两处都自己改对了**）
 3. ② 轮转那格：`throttle` **5/5**（两条路线都复原、都导出）
@@ -62,7 +59,7 @@
 ```powershell
 node tools/check-md-tables.js
 git add -A
-git commit -m "day13+14: log wrap-up + once/p-limit rewrites (5/5, 8/8) + memoize criteria"
+git commit -m "day14: log wrap-up + memoize (Map 版)"
 git push
 git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 ```

@@ -94,7 +94,7 @@ test('多个参数/参数是对象时候，则以多个参数为一组，对象�
     f1(str);
     f1(str1);
     f1(str2);
-    assert.deepEqual(called,3,'不同对象一个对象要为一组，顺序也要一致');
+    assert.deepEqual(called,2,'内容要相同，算作一组');
 
     
 })

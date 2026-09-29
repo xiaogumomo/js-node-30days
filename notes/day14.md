@@ -6,9 +6,9 @@
 
 ## 今日目标
 
-- [ ] ① 清 Day 13 尾巴：**`p-limit` 合上重写（第二遍，8/8）** + **`fetch` 分块练 4 块**（整份重写排 Day 15/16）+ `once` 合上重写（5/5）+ `notes/day13.md` ⑤⑥⑦ + commit
-- [ ] ② 轮转复习 `throttle`
-- [ ] ③ 零提示题第 8 道 `memoize` + **自写判据**
+- [×] ① 清 Day 13 尾巴：**`p-limit` 合上重写（第二遍，8/8）** + **`fetch` 分块练 4 块**（整份重写排 Day 15/16）+ `once` 合上重写（5/5）+ `notes/day13.md` ⑤⑥⑦ + commit
+- [×] ② 轮转复习 `throttle`
+- [×] ③ 零提示题第 8 道 `memoize` + **自写判据**
 - [ ] ④ 阅读：pnpm / 语义化版本 / lockfile / `npm audit`（4 行笔记）
 - [ ] ⑤ 包管理动手：`projects/p1-cli-organizer/package.json` + `pnpm test` 跑起来
 - [ ] ⑥ **项目 1 主体**：`--apply` 真的搬文件（流式复制 + 校验 + 失败隔离 + 幂等 + 冲突策略）
@@ -18,12 +18,12 @@
 ## 今日产出
 | 文件 | 内容 | 状态 |
 |---|---|---|
-| `week2-runtime/day13-p-limit.js` | 主线 A：并发池（**9/27 那版判不合格 → 今天合上重写第二遍**）| ⬜ |
-| `week2-runtime/day13-fetch-practice.js` | 主线 B：**分块练 4 个小练习**（整份重写排 Day 15/16）| ⬜ |
-| `week2-runtime/day13-zerohint-07.js` | `once` **合上重写**（昨天那遍是问 AI 的）| ⬜ |
-| `week1-language/recall-throttle.js` | 轮转复习：凭记忆重写 | ⬜ |
-| `week2-runtime/day14-zerohint-08.js` | 零提示题 `memoize` | ⬜ |
-| `week2-runtime/day14-zerohint-08-verify.js` | **我自己写的判据** | ⬜ |
+| `week2-runtime/day13-p-limit.js` | 主线 A：并发池（**9/27 那版判不合格 → 今天合上重写第二遍**）| ✅️ |
+| `week2-runtime/day13-fetch-practice.js` | 主线 B：**分块练 4 个小练习**（整份重写排 Day 15/16）| ✅️ |
+| `week2-runtime/day13-zerohint-07.js` | `once` **合上重写**（昨天那遍是问 AI 的）| ✅️|
+| `week1-language/recall-throttle.js` | 轮转复习：凭记忆重写 | ✅️ |
+| `week2-runtime/day14-zerohint-08.js` | 零提示题 `memoize` | ✅️ |
+| `week2-runtime/day14-zerohint-08-verify.js` | **我自己写的判据** | ✅️ |
 | `projects/p1-cli-organizer/package.json` | `pnpm` 建起来，`pnpm test` 能跑判据 | ⬜ |
 | `projects/p1-cli-organizer/src/cli.js` | `--apply`：搬家四步 + 失败隔离 + 幂等 | ⬜ |
 | `projects/p1-cli-organizer/README.md` | 跟上代码（四步流程 / 冲突策略 / 已知限制）| ⬜ |
@@ -37,9 +37,9 @@
 
 | 项 | 记录 |
 |---|---|
-| 写出来了吗 / 用了几分钟 | |
-| 判据（目标 5/5）| |
-| **卡在哪**（第二遍和第一遍的差别在哪）| |
+| 写出来了吗 / 用了几分钟 |写出来了 /10分钟（重写时旧版还在文件里） |
+| 判据（目标 5/5）| 5/5|
+| **卡在哪**（第二遍和第一遍的差别在哪）|第一遍是问 AI 的，第二遍自己写出来了 |
 
 **0a `p-limit` 合上重写（第二遍）**
 
@@ -47,17 +47,17 @@
 
 | 项 | 记录 |
 |---|---|
-| 这一遍用了几分钟 | |
+| 这一遍用了几分钟 | 30分钟（重写时旧版还在文件里）|
 | **"票据"**（队列里存 `resolve`/`reject`）这一遍是自己想出来的吗 |是的 |
-| **那条链 + 递归调度**这一遍是自己想出来的吗 |是的 |
+| **那条链 + 递归调度**这一遍是自己想出来的吗 |是（但旧版当时在文件注释里，所以不算完全关着写） |
 | **判据结果**（目标 8/8）|漏写fn中的() +.push()中漏写{}改完后8/8|
-| **为什么 1**：`activeCount--` + `next()` 为什么必须放在"无论成败都会执行"的那一支？只写成功分支会怎样 |死循环，activeCount如果全失败将不变，会一直循环下去 |
+| **为什么 1**：`activeCount--` + `next()` 为什么必须放在"无论成败都会执行"的那一支？只写成功分支会怎样 |不还名额 → 池子越用越窄 → activeCount 到顶后 next() 永远提前 return → 剩下的任务永远不开始、它们的 promise 永远挂着（是卡死，不是死循环）。 |
 | **为什么 2**：队列里为什么连 `resolve`/`reject` 一起存？只存 `fn` 行不行 |limit中返回的是promise，如果只存fn会导致limit中的promise永远处于pending而不会返回resolve和reject，因为根本没存之后找不到了，导致外部调用resolve和reject也调用不到 |
-| **最大同时数**（判据报的 peak）| |
+| **最大同时数**（判据报的 peak）|"02/05 通过 = peak 正好等于 n（探针不打印数值） |
 | 失败隔离怎么保证的 |每个任务都有自己的resolve和promise |
 | 排队不丢怎么保证的 |完成任务后直接接一个next保证不会丢 |
 | `n` 非法时我定的行为 + 为什么 |直接抛错，因为没有意义，只有正整数输入才知道我要并行n个任务 |
-| **今天最卡的一处** | |
+| **今天最卡的一处** | 在修改时需要靠ai知道具体哪里的小错误错了，整体框架对了|
 
 **实测输出（贴一次真实的）**：
 ✔ 00 模块能被 require，并导出 pLimit 函数 (1.3373ms)
@@ -83,9 +83,6 @@
 判据覆盖面：00–06 共 7 条必过 + P 探针 1 条 = 本文件 8 条 test()。
 （报绿之前看一眼上面的 pass 数：大半是 skipped、pass 只有个位数，那不是绿，是没跑起来。） 
 
-```
-（贴 node --test week2-runtime/day13-p-limit-verify.js 的结果，或你自己写的小 demo 输出）
-```
 
 **0b `fetch`：分块练（4 个小练习）**
 
@@ -93,10 +90,10 @@
 
 | # | 这一块自己写出来了吗 | 卡在哪 |
 |---|---|---|
-| ① `fetchOnce` 用 `AbortSignal.timeout(ms)` 一行做超时 |思路对，4 处要改 | 无|
-| ② 手写 `AbortController` + `setTimeout(abort)` + `clearTimeout` |接线对，5 处要改 |无 |
-| ③ `retryFixed`（只重试，固定等 50ms，不退避不分类）|骨架对，5 处要改 | 无|
-| ④ `HttpError extends Error` + 分类（200 回 / 500 重试 / 404 不重试）|  判断方向全对，7 处要改| 无|
+| ① `fetchOnce` 用 `AbortSignal.timeout(ms)` 一行做超时 |思路对，4 处要改 | 拼写/符号错多（8处），2 处语法错|
+| ② 手写 `AbortController` + `setTimeout(abort)` + `clearTimeout` |接线对，5 处要改 |拼写/符号错多（8处），2 处语法错|
+| ③ `retryFixed`（只重试，固定等 50ms，不退避不分类）|骨架对，5 处要改 |拼写/符号错多（8处），2 处语法错|
+| ④ `HttpError extends Error` + 分类（200 回 / 500 重试 / 404 不重试）|  判断方向全对，7 处要改| 拼写/符号错多（8处），2 处语法错|
 
 **两个"为什么"**（机制层，答不出就是还没长在身上）：
 1. fetch 返 500 时**不会 reject** → "要不要重试"的依据是什么？`res.ok` / `res.status` 各覆盖什么情况：
@@ -104,8 +101,8 @@ res.ok只统计200到299成功的情况，如果不是这个范围的状态码�
 而res.status则显示具体的状态码，覆盖所有HTTP状态，能精准分类
 看res.status自己通过写判断语句判断是否大于等于500，如果是再继续重试
 2. `abort()` 之后抛的错 `err.name` 是什么？为什么靠它能把"超时"和别的网络错误分开：
-如果是用户主动abort()终止，err.name为'AbortError'，可以通过判断语句判断“err.name === 'AbortError'”判断是否超时
-如果是超时终止AbortSignal.timeout() err.name 为Timeout则同理通过判断语句判断是否超时从而与别的网络错误分开。
+如果是用户主动abort()终止，即controller.abort()的err.name为'AbortError'，可以通过判断语句判断“err.name === 'AbortError'”判断是否超时
+如果是超时终止AbortSignal.timeout() err.name 为TimeoutError则同理通过判断语句判断是否超时从而与别的网络错误分开。
 
 
 **整份重写**：排 Day 15/16 开场（判据 `day13-fetch-verify.js` 8/8 现成）→ 这一格今天**留空**，别硬做。
@@ -134,7 +131,7 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 
 | 模块 | 结果 | 卡在哪 |
 |---|---|---|
-| throttle | 全绿| 没哟卡住|
+| throttle | 全绿（重写时旧版还在文件里）| 没卡住|
 
 ---
 
@@ -146,9 +143,10 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 | 做出来了吗 | 做出来了,但最终对象那块卡住，结果还是AI 给的|
 | **判据是我自己写的吗** | 是的|
 | **有没有"先故意让它红一次"** |没有（结果就是第 4 条 3 处写错 + 假绿）|
-| "什么算同样的参数"我定了什么 + 为什么 | |
-| 原函数抛错算不算缓存过 + 为什么 | |
+| "什么算同样的参数"我定了什么 + 为什么 |map和JOSN两种路线，如果选map，局限性太大既要保证键名要相同，又要保证内容相同，而JOSN只要考虑内容相同即可，重复操作较少，所以我选JSON ，但JOSN有代价就是遇到循环引用或BigInt会抛TypeError，undefined与null会撞|
+| 原函数抛错算不算缓存过 + 为什么 | 算缓存过，只是下次抛错返回的只是undefined，这样的设计不好，因为函数会被当成成功执行，你永远发现不出错误在哪|
 | **卡在哪一步** |键怎么造（用数组当键 → 被 JS 字符串化） |
+|记账（哪部分是 AI 给的|Map 版 / JSON 版两种键的实现是 AI 给的|
 
 ---
 
@@ -158,8 +156,8 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 2. `^1.2.3` / `~1.2.3` / `1.2.3` 各放行哪一档；`0.x.y` 特殊在哪：
 3. lockfile 为什么必须提交（没有它会怎样）：
 4. "依赖越少越好"用一个例子说清（`postinstall` / 供应链）：
-
----
+9/28 下午有课，阅读没做 → 顺延到 9/30 复盘日
+---x
 
 ## ⑤ 包管理动手：`package.json`
 
@@ -199,8 +197,12 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 
 ## 学会了什么
 
-1.
-
+1."票 vs 值"：fn 要 fn() 才执行、fetch(url) 要 await 才是 Response —— 同一天出现两次（p-limit 的 .then(()=>fn)、fetch 练习的 fetch(url)）。→ 拿到的是"票"，要用它才变成值。
+2.对象的键会被 JS 字符串化，所以string（对象）会都会变为[object,object]，导致键都会覆盖。
+3..finally的语义，无论成败都执行
+4.假绿的发生情况：memoize 判据第 4 条 3 处写错（g 写成了 g1、called = 0 应该是 called++、断言的是被前半段污染的 calls）→ "先让它红一次"这一步省掉就会这样。
+5.两种键的语义差别，Map按引用（同一个对象，内容相同还需要对象名相同），而JSON看内容，内容相同即可，代价是 JSON 遇到循环引用 / BigInt 会抛 TypeError、undefined 会和 null 撞。
+6.Map.has用法:对象键中是否有值
 ---
 
 ## AI 复核（**9/27 提前做的**：三份判据的"牙" —— 这一段是 AI 补的，不是学生写的）
@@ -385,7 +387,8 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 
 ## 卡在哪里
 
-1.
+1.p-limit 重写的两个真 bug（() => fn 没调用、push 存 3 个元素）
+2.
 
 ---
 
@@ -393,7 +396,11 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 
 | 欠什么 | 补在哪天 |
 |---|---|
-| （没欠账就写"无"） | |
+| 包管理动手 |9/29 |
+| 项目 --apply|9/29|
+| README|9/29|
+|两份日志|9/29|
+
 
 ## 明天第一件事
 
