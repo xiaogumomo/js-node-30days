@@ -1,0 +1,16 @@
+{
+  "name": "p1-cli-organizer",
+  "version": "1.0.0",
+  "description": "批量文件整理 CLI（项目 1）",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "private": "true",
+  "dependencies": {
+    "pino": "^10.3.1"
+  }
+}

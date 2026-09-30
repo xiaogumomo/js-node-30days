@@ -2,22 +2,24 @@
 
 
 
-function debounce(fn,delay,immediate){
+function debounce(fn,delay,immediate=false){
     let timer = null ;
-    let result = 0 ;
+    let result ;
     return function(...arg){
-        if(timer){  
+        if(timer){
             clearTimeout(timer);
         }
+
         if(immediate){
-            let callNow = !timer ;
-            if(callNow){
-                 result = fn.apply(this,arg);
+            let nowCall = !timer;
+            if(nowCall){
+                nowCall = false ;
+                result = fn .apply(this ,arg);
             }
         }
-        timer = setTimeout(()=>{timer=null ;result= fn.apply(this,arg);},delay);
+        timer = setTimeout(()=>{timer=null;result = fn.apply(this,arg);},delay);
         return result ;
     }
 }
 
-module .exports = {debounce};
+module .exports ={debounce};

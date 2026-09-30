@@ -70,7 +70,7 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 cd projects/p1-cli-organizer
 pnpm init
 pnpm pkg set name="p1-cli-organizer" private=true description="批量文件整理 CLI（项目 1）"
-pnpm pkg set scripts.test="node --test test/"
+pnpm pkg set scripts.test="node --test"   # ⚠️ 不带路径
 pnpm pkg get type        # ← 必须看到 undefined（= CJS）
 pnpm test                # ← 现在应该是「3 通过 / 6 红」= --apply 的待办
 pnpm add pino            # ← 第一个真依赖（0d 要用）；顺便看 lockfile 变了什么

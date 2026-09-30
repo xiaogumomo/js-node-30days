@@ -2,12 +2,11 @@
 
 // 造大文件：20 万行 NDJSON（约 13MB）。
 // 用写流造（createWriteStream + 循环 write），别一次拼个巨型字符串。
-
+const path = require('node:path');
 const fs = require("node:fs");
 const {once}= require("node:events");
 const {finished}= require ("node:stream/promises");
 const {summarize,summarizeWhole}=require("./day11-ndjson.js");
-
 async function createLargeNDJSON(file,totalLines=200000){
     const ws = fs.createWriteStream(file,{encoding:"utf-8"});
     
@@ -34,6 +33,8 @@ async function main(){
     console.log("造文件中...",file);
     await createLargeNDJSON(file,200000);
    }
+   
+
     console.log("文件大小：",(fs.statSync(file).size/1024/1024).toFixed(1),'MB');
 
 
@@ -55,5 +56,4 @@ async function main(){
     else await messure("流式版",summarize);
    }
  
-
 main();

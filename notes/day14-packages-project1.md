@@ -216,7 +216,7 @@ node week1-language/recall-verify.js throttle   # 判你的稿子
 cd projects/p1-cli-organizer
 pnpm init                       # 建 package.json
 pnpm pkg set name="p1-cli-organizer" private=true description="批量文件整理 CLI（项目 1）"
-pnpm pkg set scripts.test="node --test test/"        # 判据接进 scripts
+pnpm pkg set scripts.test="node --test"              # ⚠️ 不要带路径（见下）
 pnpm pkg get type               # ← ⚠️ 为了看清：type 是 undefined（= CJS），不是 "module"
 pnpm test                       # ← 今天要亲眼看到"判据 = 待办清单"（apply 那 6 条红）
 pnpm add -D picocolors          # 故意装一个小依赖：看 package.json / pnpm-lock.yaml 各多了什么

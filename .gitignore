@@ -4,3 +4,6 @@ node_modules/
 dist/
 coverage/
 .DS_Store
+
+# 临时测试数据（Day 15 搬大文件实验；别提交）
+week2-runtime/nb*/

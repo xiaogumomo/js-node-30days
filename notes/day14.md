@@ -157,14 +157,14 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 3. lockfile 为什么必须提交（没有它会怎样）：
 4. "依赖越少越好"用一个例子说清（`postinstall` / 供应链）：
 9/28 下午有课，阅读没做 → 顺延到 9/30 复盘日
----x
+---
 
 ## ⑤ 包管理动手：`package.json`
 
 | 项 | 记录 |
 |---|---|
-| `pnpm init` 之后我改了哪几个字段 | |
-| `pnpm test` 跑出来几条 / 红的是哪几条（是待办还是坏了）| |
+| `pnpm init` 之后我改了哪几个字段 | ame / private / description / test script / 不写 type 的理由|
+| `pnpm test` 跑出来几条 / 红的是哪几条（是待办还是坏了）| 12通过/6红 红的是代办|
 | `pnpm add -D picocolors` 之后 `package.json` / `pnpm-lock.yaml` 各多了什么 | |
 | `pnpm remove picocolors` 之后 lockfile 变回去了吗 | |
 | `pnpm audit` 的输出怎么读 | |
@@ -175,7 +175,7 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 
 | 项 | 记录 |
 |---|---|
-| 四步的顺序（mkdir → ? → ? → ?）| |
+| 四步的顺序（mkdir → ? → ? → ?）| mkdir -> 流式复制 ->校验->删源|
 | 流式复制用的是什么（`createReadStream` + 什么）| |
 | 校验怎么做的（比了什么）| |
 | **为什么"删源"必须放在校验之后** | |
@@ -382,6 +382,30 @@ git ls-remote --heads origin main   # 和 git rev-parse HEAD 比 SHA
 - **"票 vs 值"一天出现两次**：`p-limit` 的 `.then(()=>fn)`（拿到函数没调用）、`fetch` 练习块④的 `fetch(url)`（拿到 Promise 没 await）。
 - **`await` 忘在调用处：第 4 次**（`sleep(timeoutMs)`）。
 - **拼写/符号错 8 处**（`Abortsignal` / `setTimout` / `controllerabort` / `reires` / `retires` / `Options` / `cosntructor`）—— **实测：`node --check` 只抓得到其中 2 处语法错，其余全靠"跑一次"**。
+
+
+### 3. ⚠️ AI 给错了一条命令（9/29 现场，**记在 AI 头上**）
+
+day15 任务书 0b 里那句 `pnpm pkg set scripts.test="node --test test/"` **是 AI 给的，而且没跑过** —— 他照着执行，`pnpm test` 直接报：
+
+```
+Error: Cannot find module '...\projects\p1-cli-organizer\test'   code: 'MODULE_NOT_FOUND'
+```
+
+**根因（AI 实测复现）**：这个 Node 版本（v24.21）下，`node --test <路径>` 把路径当成**"要执行的模块"**（于是去跑 `node test/` → 找不到模块），**不是"要扫描的目录"**。
+
+| 命令 | 结果 |
+|---|---|
+| `node --test test/`（AI 给的）| ❌ `Cannot find module …\test` → 1 条 / 0 通过 / 1 红 |
+| `node --test test`（不带斜杠）| ❌ 同样错（**不是斜杠的问题**）|
+| **`node --test`**（在项目目录里、不给路径）| ✅ **18 条 / 12 通过 / 6 红** |
+| `node --test "test/*.test.js"`（引号包住的 glob）| ✅ 18 条 / 12 通过 / 6 红 |
+
+**修法**：`pnpm pkg set scripts.test="node --test"`（**不带路径**）。两份任务书里的错命令已就地改掉。
+
+**顺带更正一个数**：`pnpm test` 在项目里跑出来是 **12 通过 / 6 红**（`cli.test.js` 9/9 + `apply.test.js` 3/6），**不是**"3 通过 / 6 红" —— 那个 3 是**单跑 `apply.test.js`** 时的数。红的 6 条全是 `--apply` 的待办，**不是坏了**。
+
+**通用教训（又一次）**：**AI 给的命令也要先跑一遍** —— 这条规矩原作里写的是防"AI 没跑就断言"，这次是**命令本身**没跑过。他这一下午的时间有一部分就是这么没的。
 
 ---
 

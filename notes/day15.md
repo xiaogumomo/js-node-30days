@@ -125,7 +125,22 @@ git add -A && git commit -m "day13+14: log wrap-up + once/p-limit rewrites (5/5,
 
 ## 学会了什么
 
-1.
+1.哈希函数类似于搅拌机
+crypto.createHash('sha256');
+crypto为Node.js的内置模块专门加密、哈希、随机数这些事
+createHash工厂函数创造一个哈希计算器对象
+'sha256'算法名 告诉createHash用哪一种哈希算法
+'md5'  16字节 快但证明不安全
+'sha1'  20字节  也不推荐
+'sha256'  32字节  目前主流，推荐
+'sha512'  64字节  更安全,稍慢
+hash.update('hello')把’水果‘喂进去 把'hello'喂进去
+hash.digest('hex')出结果 搅拌机的结果
+'hex'是一个哈希值  
+'hex'   只含0--9a-f的字符串  以sha256为例的长度 64字符
+'base64'   含大小写的字母、数字、+/=  以sha256为例的长度 44字符
+不传       Buffer二进制     32字节
+
 
 ---
 
@@ -137,7 +152,9 @@ git add -A && git commit -m "day13+14: log wrap-up + once/p-limit rewrites (5/5,
 
 ## 卡在哪里
 
-1.
+1.不知道哈希是什么哈希该怎么用
+2.fs.unlink()不知道如何执行删除操作和safeUnlink不知道该如何构建才算安全
+3.
 
 ---
 
