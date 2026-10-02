@@ -163,6 +163,12 @@ test('03 超时：服务器 600ms 才回、timeoutMs=100 → 应该在 100ms 左
     threw = err;
   }
   const elapsed = Date.now() - t0;
+  // 2026-10-02 补的牙：原版只看"抛没抛 + 花了多久"，于是"一进函数就崩"也能拿到这格的绿
+  //   （15:50 实测：那种情况下这格是绿的，但它跟"超时"一点关系都没有）→ 加一条"请求到底发出去没有"
+  assert.ok(
+    hit('/slow600') > 0,
+    '这次调用**根本没把请求发出去** —— 那是"函数一进去就崩了"，不是"超时掐掉的"，两件事不能算一件'
+  );
   assert.ok(threw, '超时应该抛错（不能一直等下去）');
   if (elapsed > 400) {
     assert.fail(
@@ -188,6 +194,18 @@ test('05 全失败时抛出的错误是"真错误"，不是 undefined', { skip, 
     threw = err;
   }
   assert.ok(threw, '应该抛错');
+  // 2026-10-02 补的牙（两条）：原版只判"有 name 或 message"，于是
+  //   ① 函数在发请求前就崩 → 也算过；② `throw Error`（抛构造函数、不是实例）→ name 是 'Error'，也算过
+  assert.ok(
+    hit('/always500') > 0,
+    '这次调用**根本没把请求发出去** —— 说明函数在发请求之前就崩了，跟"重试用尽"是两回事'
+  );
+  assert.ok(
+    threw instanceof Error,
+    '抛出来的必须是**一个 Error 实例**（你这次拿到的是：' +
+      (typeof threw === 'function' ? '一个函数 —— 很可能是 `throw Error`，那抛的是构造函数本身' : String(threw)) +
+      '）。\n   调用方要读 err.message / err.name，抛函数或裸值都读不到'
+  );
   assert.ok(
     threw.name || threw.message,
     '抛出来的东西要带 name 或 message（别把一个空对象/undefined 抛出去，调用方没法判断）'

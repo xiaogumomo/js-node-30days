@@ -307,8 +307,10 @@ test('07 命令行：目录不存在时友好报错（不是崩一堆栈）', { 
 
 // ⚠️ 这一条也**故意不跟 skip 走**（同上）。
 test('08 模块能被 require 而不会顺手把 CLI 入口跑起来', () => {
+  // 2026-10-02 补：这条的名字里有"能被 require"，所以"崩了 / 文件不在"也得红
+  //   （原版只判 !guardProblem → 语法错时它会**绿**，报告里那个孤零零的 "pass 1" 就是它）
   assert.ok(
-    !guardProblem,
+    scriptExists && !probeCrash && !guardProblem,
     moduleTrouble() +
       `\n    （实测：require 它时退出码 ${probeRequire.status}，输出：${JSON.stringify(probeOut.trim().slice(0, 200))}）`
   );
