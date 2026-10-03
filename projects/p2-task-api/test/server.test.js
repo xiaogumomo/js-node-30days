@@ -73,12 +73,59 @@ after(() => {
 let server = null;
 let base = null;
 
+/**
+ * ⚠️ 2026-10-03 修正（AI 记账）：原版写的是 `s.listen(0, '127.0.0.1', cb)` + `s.address().port` ——
+ *   那只在**纯 node:http** 上成立（参照实现正好是它，所以当时没暴露）。实测：
+ *     · **Fastify 不吃这个签名** → 抛 `Cannot create property 'host' on number '0'`
+ *     · **Express** 的 `app.listen()` 返回的是**新建的 http.Server**，不是 `app` 本身
+ *   → 用框架的同学会卡在"判据里连服务都起不来"，而这不是他的错。
+ *   改成**框架无关**：listen 用 **options 对象**（node:http / Express / Fastify 三家都认）；
+ *   端口从"真正在监听的那个 handle"取（Fastify 的内层 http server 挂在 `.server` 上）。
+ */
+async function listenWith(s) {
+  let handle = s;
+  await new Promise((resolve, reject) => {
+    const cb = (err) => (err ? reject(err) : resolve());
+    try {
+      const ret = s.listen({ port: 0, host: '127.0.0.1' }, cb);   // 端口 0 = 系统随便给一个
+      if (ret && typeof ret.then === 'function') {
+        ret.catch(reject);                                        // Fastify 还会额外返回 promise
+      } else if (ret && typeof ret.address === 'function') {
+        handle = ret;                                             // Express：app.listen 返回 http.Server
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+  return handle;
+}
+
+function portOf(handle) {
+  const inner = handle.server ?? handle;                          // Fastify：.server；node:http：它自己
+  const addr =
+    (typeof inner.address === 'function' ? inner.address() : null) ??
+    (typeof handle.address === 'function' ? handle.address() : null);
+  if (!addr || typeof addr.port !== 'number') {
+    throw new Error(
+      '拿不到监听端口 —— buildServer() 要返回"能被 listen 的对象"：node:http 的 server、' +
+        'Fastify 实例、或 Express 的 app 都行（契约见 notes/day17-web-framework.md）'
+    );
+  }
+  return addr.port;
+}
+
 async function startServer() {
   const maybe = buildServer();
   const s = await Promise.resolve(maybe);            // 同步返回或返回 Promise 都支持
-  await new Promise((r) => s.listen(0, '127.0.0.1', r));  // 端口 0 = 让系统随便给一个（不占固定端口）
-  server = s;
-  base = `http://127.0.0.1:${s.address().port}`;
+  server = await listenWith(s);
+  base = `http://127.0.0.1:${portOf(server)}`;
+}
+
+async function closeServer(handle) {
+  if (!handle) return;
+  const inner = handle.server ?? handle;
+  inner.closeAllConnections?.();
+  await new Promise((r) => handle.close(() => r()));
 }
 
 before(async () => {
@@ -91,10 +138,7 @@ before(async () => {
 });
 
 after(async () => {
-  if (server) {
-    server.closeAllConnections?.();
-    await new Promise((r) => server.close(r));
-  }
+  await closeServer(server);
 });
 
 const get = (p) => fetch(base + p);

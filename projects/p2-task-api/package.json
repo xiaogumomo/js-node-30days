@@ -1,0 +1,25 @@
+{
+  "name": "p2-task-api",
+  "version": "1.0.0",
+  "description": "任务管理 REST API（项目 2）",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.8.1",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.8.1",
+  "private": "true",
+  "dependencies": {
+    "fastify": "^5.12.5"
+  }
+}

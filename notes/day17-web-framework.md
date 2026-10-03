@@ -150,7 +150,8 @@ pnpm pkg set name="p2-task-api" private=true description="任务管理 REST API�
 pnpm pkg set scripts.test="node --test"
 pnpm pkg set scripts.start="node src/server.js"
 pnpm add fastify                        # 第 2 个真依赖 —— 写一句"为什么是它"
-pnpm pkg get type                       # 必须是 undefined（CJS）
+pnpm pkg get type                       # 没输出 = 没有 type 字段 = CJS ✅（pnpm 12 不打印缺失字段）
+node -p "require('./package.json').type ?? 'CJS ✅'"     # 更直白的验法
 ```
 > 如果你想用 **ESM**（`"type": "module"` + `import`）：**判据两种都支持**（Node 24 能 `require(esm)`），**但选一个 + 在 README/日志里写一句为什么**。我的建议：**这个项目继续 CJS**（和 p1 一致、你熟悉），第 4 周接 LLM SDK（多为 ESM-first）时再切换。
 
