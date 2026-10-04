@@ -1,93 +1,50 @@
 
 
 
-function myMap1(arr,fn){
-    let out = [] ;
-     for(let i = 0; i<arr.length;i++){
-       out.push(fn(arr[item],item ,arr));
-     }
-     return out ;
-}
-
-
-// console.log(myMap([10,20],(el,i,arr)=>{
-//     console.log("输出为：",el,i,arr);return el *2;
-// }));
-
-
-function myReduce1(arr,fn,init){
-    let acc=0 ;
-    let start = 0;
-    if(init === undefined){
-        acc =arr[0];
-        start = 1 ;
-    }else{
-        acc=init;
-        start = 0 ;
-    }
-    for(let i=start;i<arr.length;i++){
-        acc = fn(acc,arr[i],i,arr);
-    }
-    return acc;
-}
-
-// console.log(myReduce([10,20],(acc,el,i,arr)=>{
-//     console.log('输出为：',acc,el,i,arr);return el*2;
-// },0));
-
-function myFilter1(arr,fn){
-    let out = [];
-    for(let i=0;i<arr.length;i++){
-        if(fn(arr[i],i,arr)){
-            out.push(arr[i]);
-        }
-    }
-    return out ;
-}
-
-// console.log(myfilter([10,20],(el,i,arr)=>{
-//     console.log("输出为：",el,i,arr);el*2;return true;
-// }));
-
-
 function myMap(arr,fn){
-    let out = [];
-    for(let i=0;i<arr.length;i++){
-        out.push(fn(arr[i],i,arr));
-    }
-    return out ;
+    let result=[] ;
+
+        for(let i = 0 ; i<arr.length ; i++){
+            result[i]=fn(arr[i],i,arr);
+        }
+        
+   return result ;
+
 }
+
+
 
 
 function myFilter(arr,fn){
-    let out = [];
-    for(let i = 0 ;i<arr.length;i++){
+    let result = [] ;
+
+    for(let i = 0 ;i<arr.length ; i++){
         if(fn(arr[i],i,arr)){
-            out.push(arr[i]);
+            result.push(arr[i]);
         }
     }
-    return out ;
+    return result ;
 }
 
 
-function myReduce(arr,fn,init){
-    let acc = 0 ;
-    let start = 0 ;
-    if(init === undefined){
+
+function myReduce(arr,fn,initialValue){
+     let start ;
+     let acc;
+    if(initialValue === undefined){
+        start = 1;
         acc =arr[0];
-        start = 1 ;
     }else{
-        acc = init ; 
-        start = 0 ;
+       
+      start = 0; 
+      acc=initialValue  ;
     }
 
-    for(let i = start ; i<arr.length ;i++){
-        acc=fn(acc,arr[i],i,arr);
+    for(let i =start;i <arr.length ; i++){
+        acc = fn(acc,arr[i],i,arr);
     }
 
     return acc ;
+    
 }
-
-
- 
-module .exports ={myMap,myReduce,myFilter};
+module .exports={myReduce, myFilter,myMap};

@@ -284,3 +284,33 @@ git status -sb
 git add -A && git commit -m "day18: p2 skeleton 7/7 + sqlite tasks CRUD 9/9 + migrations" && git push
 git ls-remote --heads origin main
 ```
+
+---
+
+# Day 18 第 2 天 — 2026-10-04（周日）
+
+> 任务书：[`day18-day2.md`](day18-day2.md)　｜　**实际开始 09:50**（比原计划迟）→ 时间表**按实际时间重排**，结束晚点没关系
+> 今天两块（**都不许砍**）：**3c 拼装 → 判据 7/7**　+　**数据库 → `tasks` 表 + CRUD → 判据 9/9**
+
+## 今日目标（第 2 天）
+
+- [ ] ① 开场：轮转 `arrayUtils`（合上重写）+ 合上重写 10/3 的 scratch（只留一个 `listen`）
+- [ ] ② 读 Fastify **Errors**（只读 `setErrorHandler` 那段）+ demo：`onRequest` 钩子 + `setErrorHandler`
+- [ ] ③ **3c 拼装 → `src/server.js` → 判据 7/7**
+- [ ] ④ 四个 SQL 实验（`week3-backend/day18-sql-basics.js`）
+- [ ] ⑤ **`tasks` 表 + CRUD → 判据 9/9**
+- [ ] ⑥ 建表/迁移 SQL 进 git（`db/migrations/001_init.sql`）
+- [ ] ⑦ ④ 阅读四行 + 无权限实测（挂了 5 天的欠账；**砍单最先砍它**）
+- [ ] ⑧ 收尾：日志 + `node tools/sp-tasks.js today`（**计划 vs 实际**）+ `commit` + `push`
+
+## 每格结束写一句"到点了，我停在哪"（心法第 11 条）
+
+| 时段 | 到点了，我停在哪 |
+|---|---|
+| 10:00–10:05 轮转 `arrayUtils` | |
+| 10:05–10:20 重写 scratch | |
+| 10:20–10:50 读 Errors + demo | |
+| 10:50–13:00 **拼装 → 7/7** | |
+| 13:50–14:50 四个 SQL 实验 | |
+| 14:50–17:20 **CRUD → 9/9** | |
+| 17:20–17:55 收尾 | |

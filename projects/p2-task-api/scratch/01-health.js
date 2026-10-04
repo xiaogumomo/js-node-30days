@@ -1,34 +1,33 @@
 
 
-const fastify = require('fastify');
+const fastify = require("fastify");
 
-const app = fastify();
+
+
 
 app.get('/health',async()=>{
+    const app = fastify();
     return {ok:true};
+})
+
+
+
+app.get('/tasks',async()=>{
+    return [];
 });
 
-app.listen({port:Number(process.env.PORT)||3000},(err)=>{
+app.get('/tasks/:id',(request)=>{
+    return  {id: request.params.id,title:'假代码',query:request.query}; 
+})
+
+
+app.listen({port:process.env.PORT||3000},(err)=>{
     if(err){
         console.error(err);
         process.exit(1);
     }
-console.log(`起来了->http://127.0.0.1:${app.server.address().port}/health`);
-
+    console.log(`Http://127.0.0.1:${app.server.address().port}/health`);
 });
-
-
-
-app.get("/tasks",async()=>{
-    return [];
-});
-
-
-app.get('/tasks/:id',async(req)=>{
-    return{id:req.params.id,title:'假数据',query:req.query};
-});
-
-
 
 
 
