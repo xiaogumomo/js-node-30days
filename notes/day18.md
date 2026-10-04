@@ -273,6 +273,24 @@ NODE_ENV 环境变量来决定返回什么。
 
 20. .run()返回的结果对象
 受影响的行数changes lastInsertRowid最后插入行的id
+
+21. 为什么pnpm能节省磁盘空间？
+pnpm节省磁盘空间的关键在于它彻底改变了依赖的存储方式。
+npm在安装依赖时，如果100个项目都用了同一个版本的包，磁盘上就会实实在在地保存100份该包的副本
+pnpm采用了一种更聪明的内容可寻址存储（Content-Addressable Store） 方案
+全局存储，只存一份 放在一个全局仓库 在磁盘上都只保存唯一一份
+如果包有了新版本，pnpm也只会把修改过的文件加入仓库，而不是整个复制一遍
+硬链接，不占额外空间 当项目需要某个依赖时，pnpm会从全局仓库创建一个硬链接（Hard Link） 到项目的node_modules目录中。硬链接就像一个 **“快捷方式”**，它让项目里的文件和全局仓库里的源文件指向磁盘上的同一个物理位置。因此，项目里的这个文件并不会额外占用磁盘空间，只是多了一个指向源文件的“入口”
+什么是“幽灵依赖”？pnpm如何根除它？
+幽灵依赖”指的是你的代码里使用了某个包，但这个包并没有在你项目的package.json文件中声明。
+npm的做法（扁平化：把全部依赖全部上升到根目录上变为一层）：为了解决旧版依赖嵌套过深导致的路径过长问题，npm从v3开始会将依赖尽量“提升”到node_modules的根目录
+产生的问题：这种“提升”是无差别的，它会把所有的依赖，包括你直接依赖的子依赖，都提升到顶层。结果就是，你的项目代码可以访问到这些本不属于你的、被提升上来的包，这就是“幽灵依赖
+**风险**：一旦你的直接依赖升级，不再依赖那个被提升的包，你的代码就会突然报错，因为那个“幽灵”消失了
+
+pnpm的解决方案（非扁平化结构）：
+只有你项目package.json中明确声明的直接依赖，它们都是指向.pnpm目录的符号链接（Symlink）
+而所有的传递依赖（即依赖的依赖）则被严格地放置在.pnpm这个隐藏目录中，并通过符号链接与各自的父依赖关联
+这意味着，Node.js的模块解析机制无法向上遍历找到那些未被声明的包。你的代码只能访问到那些你明确声明过的依赖
 ---
 
 ## 卡在哪里
@@ -341,14 +359,64 @@ git ls-remote --heads origin main
 
 ## 今日目标（第 2 天）
 
-- [ ] ① 开场：轮转 `arrayUtils`（合上重写）+ 合上重写 10/3 的 scratch（只留一个 `listen`）
-- [ ] ② 读 Fastify **Errors**（只读 `setErrorHandler` 那段）+ demo：`onRequest` 钩子 + `setErrorHandler`
-- [ ] ③ **3c 拼装 → `src/server.js` → 判据 7/7**
-- [ ] ④ 四个 SQL 实验（`week3-backend/day18-sql-basics.js`）
-- [ ] ⑤ **`tasks` 表 + CRUD → 判据 9/9**
-- [ ] ⑥ 建表/迁移 SQL 进 git（`db/migrations/001_init.sql`）
-- [ ] ⑦ ④ 阅读四行 + 无权限实测（挂了 5 天的欠账；**砍单最先砍它**）
-- [ ] ⑧ 收尾：日志 + `node tools/sp-tasks.js today`（**计划 vs 实际**）+ `commit` + `push`
+- [×] ① 开场：轮转 `arrayUtils`（合上重写）+ 合上重写 10/3 的 scratch（只留一个 `listen`）
+- [×] ② 读 Fastify **Errors**（只读 `setErrorHandler` 那段）+ demo：`onRequest` 钩子 + `setErrorHandler`
+- [×] ③ **3c 拼装 → `src/server.js` → 判据 7/7**
+- [×] ④ 四个 SQL 实验（`week3-backend/day18-sql-basics.js`）
+- [×] ⑤ **`tasks` 表 + CRUD → 判据 9/9**
+- [×] ⑥ 建表/迁移 SQL 进 git（`db/migrations/001_init.sql`）
+- [×] ⑦ ④ 阅读四行 + 无权限实测（挂了 5 天的欠账；**砍单最先砍它**）
+- [×] ⑧ 收尾：日志 + `node tools/sp-tasks.js today`（**计划 vs 实际**）+ `commit` + `push`
+
+
+
+**⑦ 阅读四行**
+
+1. pnpm 和 npm 最实质的差别（为什么省磁盘 / 幽灵依赖）：
+pnpm的存储方式是当多个文件需要一个依赖的时候，pnpm将一个依赖存储到自己的中央仓库里，同时跟那些需要这个依赖的文件在全局仓库里建立硬链接，让文件共用一个依赖，同时在需要更新的依赖也只会替换一个在全局仓库的依赖。而不是复制多份
+但npm就不一样，它会复制多份，每个需要一个依赖的复制一份，这就造成了大量的磁盘占用
+2. `^1.2.3` / `~1.2.3` / `1.2.3` 各放行哪一档；`0.x.y` 特殊在哪：
+^1.2.3 插入符号 允许允许次版本（minor）和补丁版本（patch） 升级，即 >=1.2.3 <2.0.0
+~1.2.3 允许补丁版本（patch） 升级，即 >=1.2.3 <1.3.0。
+1.2.3 只允许安装完全等于 1.2.3 的版本，不进行任何升级。
+
+主版本号为 0（0.y.z）表示初始开发阶段，任何东西都可能随时改变，公共 API 不应被视为稳定 **只能补丁更新**
+ 0.x.y 阶段的包，使用 ^ 等同于使用 ~
+3. lockfile 为什么必须提交（没有它会怎样）：
+因为它锁定了依赖树的精确状态
+在 CI 和生产环境中安装更快：因为 pnpm-lock.yaml 已经记录了所有依赖的精确版本和下载地址，安装时可以跳过依赖解析这一耗时步骤，直接按图索骥下载
+在开发、测试和生产环境间强制一致：提交锁文件能确保测试和生产环境中使用的包，与你开发时完全一致，消除了环境差异导致“在我机器上能跑”的问题
+4. "依赖越少越好"用一个例子说清（`postinstall` / 供应链）：
+现代前端应用高达 97% 的代码来自 npm 依赖开发者自己编写的独特代码仅占 3% 左右
+这意味着，你项目里的绝大部分代码从未被你或你的团队读过，却拥有与你自己的代码完全相同的执行权限。
+postinstall 是定义在 package.json 中的一个安装生命周期脚本
+它的合法用途包括：
+
+原生模块编译：如 node-sass 在安装时编译 C++ 绑定。
+
+平台适配：根据操作系统下载对应的二进制文件。
+
+代码生成：在安装后生成必要的客户端代码或配置
+它的危险之处在于：它本质上是一段拥有完整执行权限的自动程序
+恶意 postinstall 脚本可以：
+窃取环境变量、.npmrc 中的 npm Token、云服务密钥、SSH 私钥等。
+从远程服务器下载并执行二级恶意载荷，且可能故意禁用 TLS 验证以规避检测。
+在 CI/CD 和云环境中故意跳过执行，专门针对开发者工作站进行入侵。
+
+攻击者的核心目标是获取发布权限或诱骗你安装恶意代码。
+1. 账户接管与凭证窃取（最主流）
+2. 依赖混淆（Dependency Confusion）
+3. 域名抢注（Typosquatting）
+4. 维护者无心引入
+
+**无权限实测**
+
+node projects/p1-cli-organizer/src/cli.js "C:/Windows/System32/config"
+
+PS C:\Users\27971\.zcode\workspace\default\js-node-30days> node    projects/p1-cli-organizer/src/cli.js "C:/Windows/System32/config"
+源目录读取不了 C:/Windows/System32/config —— 没有权限
+
+
 
 ## 每格结束写一句"到点了，我停在哪"（心法第 11 条）
 
@@ -360,4 +428,49 @@ git ls-remote --heads origin main
 | 10:50–13:00 **拼装 → 7/7** |全部完成 |
 | 13:50–14:50 四个 SQL 实验 |停在实验2刚结束 |
 | 14:50–17:20 **CRUD → 9/9** | 停在块3修改|
-| 17:20–17:55 收尾 | |
+| 17:20–17:55 收尾 |pnpm 和 npm 最实质的差别（为什么省磁盘 / 幽灵依赖） |
+
+
+## 记账（**两面都记**）
+
+| 这一遍 | 记什么 |
+|---|---|
+| **哪部分是 AI 给的** | exec vs prepare/run 的分工讲解 + 两个示范（块 1 骨架、块 3/4 的写法）|
+| **我自己写了哪几块** | 5 条 handler 的装配、迁移文件、UPDATE/DELETE/校验、以及把 8 处 bug 一个个修掉|
+
+### 记账·完整版（AI 补全，2026-10-04 收工 —— 你说"务必要完整"）
+
+> 三列：**AI 给的**（示范 / 讲解 / 判据）/ **我自己写的**（实现主体）/ **AI 帮我定位的**（= "以后该我自己发现"的量）。
+> 结论：**实现主体全是我的** —— 每一行能跑的业务代码都是我打的 ✓ 这符合计划 §一 的红线（"实现由学生写、测试可以由 AI 写"）。
+
+| 任务 | AI 给的 | 我自己写的 | AI 帮我定位的 |
+|---|---|---|---|
+| 轮转 `arrayUtils` | — | `myMap` / `myFilter` / `myReduce` 全篇（闭卷）| 3 条红的原因：`resut`/`reulst` 手滑、`myReduce` 的 `if(initialValue)`、循环没用上 `start` |
+| scratch 重写 | 4 行的形状（`fastify()` / `app.get` / `return 对象` / `listen({port},cb)`）+ `:id`·`query` 示范 | `/tasks`、`PORT` + 默认值、真实端口日志、`:id` + `query` | `/tasks/:id` 少个 `s`（404）、`(res)`→`(req)`、`listen` 夹在路由中间 |
+| **3c 拼装 → 7/7** | 两段式结构示范（`buildServer` 里 return / `require.main` 守卫）+ `/boom` 那 3 行 + `setErrorHandler` 形状 | 四条路由的搬运、`buildServer` 的组装、迁移文件、错误文案（"服务器开小差啦"）| **漏 `return app`**（判据"检测不到"）、`app` 放模块顶层、`process.exitCode(1)`、日志写死端口 |
+| 四个 SQL 实验 | `node:sqlite` 五个动作的最小示范、四个实验的步骤 + 预期、"记计划别记耗时"、`IF NOT EXISTS` vs `DROP` | 四个实验**全部代码**；**自己补的第 4 条（并发与锁）**；**修正了 AI 关于 `EXPLAIN`/`ANALYZE` 的说法** | `table tasks already exists`（其实= 真落库的证据）、`close()` 之后 `database is not open`、`BFGIN` 拼写、`PLANSELECT`（少空格）|
+| **CRUD → 9/9** | 块 1 骨架、`exec` vs `prepare/run` 的分工讲解、块 3/4 的写法、`!== undefined` 的答案 | 5 条 handler 的装配、`UPDATE`/`DELETE`、`title` 校验、迁移文件落地 | 8 处：`require('lab.db')`、缺 `path`/`fs`、两条重复的 `GET /tasks`、`dbFile` TDZ、`db` TDZ、`{ path }` 解构、`./db/.migration` 路径、`Number(r,id)` |
+| 收尾 | 四行阅读的书单入口 + 负面清单、无权限实测的期望输出 | 四行笔记（自己的话）+ 无权限实测 | — |
+| 判据本身 | 两份判据（7 条 + 9 条）+ 负向验证；**今天还修了判据两处**（框架兼容 bug、误导文案）| — | — |
+
+**从明天起的固定三行**：`AI 帮我定位的` 这一列 = "**以后该我自己发现**"的量。
+今天 **15+ 处**里，**6 处是"报错第一行就写着"**（`FST_ERR_REOPENED_SERVER` / `PLANSELECT` / `Cannot access 'db'` / `database is not open` / `Cannot find module` / `table already exists`）→ "先读第一行"你今天练了 4 次 ✓
+**明天目标：这一列 ≤ 3 处。**
+
+
+
+##  计划 vs 实际
+
+  15m →    3m  [10/4] 17:40-17:55 收尾：日志 + today + commit + push
+  20m →   40m  [10/4] 17:20-17:40 ④ 阅读四行 + 无权限实测
+ 150m →  165m  [10/4] 14:50-17:20 tasks 表 + CRUD → 判据 9/9
+  60m →  132m  [10/4] 13:50-14:50 四个 SQL 实验
+  50m →    1m  [10/4] 13:00-13:50 午饭 + 离开屏幕
+ 130m →   28m  [10/4] 10:50-13:00 3c 拼装 → src/server.js → 判据 7/7
+  15m →   30m  [10/4] 10:35-10:50 demo：onRequest 钩子 + setErrorHandler
+  15m →    0m  [10/4] 10:20-10:35 读 Fastify Errors（只读 setErrorHandler）+ 对照 Express 笔记
+  15m →   23m  [10/4] 10:05-10:20 合上重写 10/3 的 scratch（只留一个 listen）
+   5m →   23m  [10/4] 10:00-10:05 轮转 arrayUtils（合上重写）
+—— 今天：计划 475m / 实际 444m
+
+
