@@ -51,10 +51,36 @@
 
 | # | 实验 | 我的预期 | 实际 | 记下的"为什么" |
 |---|---|---|---|---|
-| 1 | 建表（主键/NOT NULL/DEFAULT）+ 插 3 行 + 查出来 | | | |
-| 2 | 事务：两条 `INSERT` 中间故意抛错 → `ROLLBACK` | | | |
-| 3 | 索引：1 万行，建索引**前 / 后**两个耗时 | 前 ____ ms | 后 ____ ms | |
+| 1 | 建表（主键/NOT NULL/DEFAULT）+ 插 3 行 + 查出来 | |[
+  [Object: null prototype] { id: 1, title: '写周报', done: 0 },
+  [Object: null prototype] { id: 2, title: '看文档', done: 0 },
+  [Object: null prototype] { id: 3, title: '跑步', done: 0 }
+] | |
+| 2 | 事务：两条 `INSERT` 中间故意抛错 → `ROLLBACK` | 错一个就回滚| 已回滚：故意炸
+[
+  [Object: null prototype] { id: 1, title: '写周报', done: 0 },
+  [Object: null prototype] { id: 2, title: '看文档', done: 0 },
+  [Object: null prototype] { id: 3, title: '跑步', done: 0 }
+]| |
+| 3 | 索引：1 万行，建索引**前 / 后**两个耗时 | 前 __0.76__ ms | 后 __0.18__ ms | |
 | 4 | Postgres vs SQLite 的 3 处差异（4 行笔记）| | | |
+
+
+事务小实验：把 COMMIT 和 ROLLBACK 都删掉 → 再跑 → 看条数是 3 还是 4？ 
+我猜测的 3条   实际：4条
+① 同一个连接里查 -> 1 条     ← 你看到 4 条就是这个
+② 换个新连接再查 -> 0 条     ← 这才说明有没有落盘
+因为BEGIN还开着，只是没有 COMMIT 和 ROLLBACK导致留在里面ins.run留在里面没有结算，一旦连接关将自动回滚，
+
+
+索引输出
+|  | 计划 | 耗时（仅供参考） |
+| --- | --- | --- |
+| 无索引 | SCAN tasks | 0.76 ms |
+| 有索引 | SEARCH … USING INDEX idx_tasks_title (title=?) | 0.18 ms |
+| 删掉索引 | 又变回 SCAN tasks | — |
+
+
 
 ## ③ Day 18 做：`tasks` 表 + CRUD（判据 9/9）
 
@@ -226,6 +252,27 @@ NODE_ENV 环境变量来决定返回什么。
 
 16. Express 默认以 HTML 形式返回错误，是因为它最初是为构建网页应用而设计的
 如果你在构建 REST API，通常希望返回 JSON 格式的错误，这时就需要自定义错误处理中间件来覆盖默认行为。
+
+
+
+17. 事务第一个用处：控制任务的并行性：
+事务 = 一组操作要么全成功、要么全不发生；BEGIN 之后要靠 COMMIT 才落地
+
+
+
+18. 事务"的第 2 个用处：不只是"要么都成功"，它也是性能工具
+
+
+19. 
+| 事项 | SQLite | Postgres | 一句话"为什么" |
+| --- | --- | --- | --- |
+| 自增主键 |  AUTOINCREMENT额外保证会严格大于该表中曾经出现过的最大 ID代价是 SQLite 需要额外维护一个 sqlite_sequence 表，有轻微性能开销 | SERIAL/IDENTITY SERIAL自动创建一个INTEGER列 关联一个序列（Sequence） 对象作为其默认值。 IDENTITY 如 id INT GENERATED ALWAAYS AS IDNTITY PRIMARY KEY | 使用语法的不同,实现方式不同 |
+| 类型 | SQLite 只有五种存储类：NULL,INTEGER,REAL,TEXT,BLOB没有独立的布尔类型也没有精确的 DECIMAL 类型小数通常用 REAL（浮点数）存储，可能存在精度问题| PostgreSQL 拥有丰富且严格的数据类型系统，包括 BOOLEAN, DATE, TIMESTAMP, NUMERIC (精确小数), JSONB, ARRAY 等 数据库会强制执行类型检查。| 类型的种类丰富程度和类型检查的精细程度存在差异|
+| 看执行计划 | EXPLAIN QUERY PLAN默认不执行，仅分析关注是否 **使用索引 ** 简洁文本，核心是 detail 列| EXPLAIN  默认不执行，需加 ANALYZE 选项才真实执行 详细的成本估算、行数估算和执行时间 树状结构，可输出为 TEXT, JSON, XML 等格式| 使用命令和返回的输出详细程度，PostgreSQL需要手动ANALYZE才能执行 |
+| 并发于锁| 文件级锁+单写者模型。修改一个进程会影响整个数据库，其他操作必须等待 | MVCC多版本并发控制+行级锁 修改不用行的会话之间可以独立运行 | 只供一人使用和可以跟多人使用的区别（个人和企业级的区别） |
+
+20. .run()返回的结果对象
+受影响的行数changes lastInsertRowid最后插入行的id
 ---
 
 ## 卡在哪里
@@ -307,10 +354,10 @@ git ls-remote --heads origin main
 
 | 时段 | 到点了，我停在哪 |
 |---|---|
-| 10:00–10:05 轮转 `arrayUtils` | |
-| 10:05–10:20 重写 scratch | |
+| 10:00–10:05 轮转 `arrayUtils` | 停在myReduce|
+| 10:05–10:20 重写 scratch | 全部完成|
 | 10:20–10:50 读 Errors + demo | |
-| 10:50–13:00 **拼装 → 7/7** | |
-| 13:50–14:50 四个 SQL 实验 | |
-| 14:50–17:20 **CRUD → 9/9** | |
+| 10:50–13:00 **拼装 → 7/7** |全部完成 |
+| 13:50–14:50 四个 SQL 实验 |停在实验2刚结束 |
+| 14:50–17:20 **CRUD → 9/9** | 停在块3修改|
 | 17:20–17:55 收尾 | |

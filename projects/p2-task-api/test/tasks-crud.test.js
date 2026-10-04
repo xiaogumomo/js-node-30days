@@ -49,7 +49,13 @@ const probeCrash = exists && /SyntaxError|ReferenceError|TypeError|Cannot find m
 function moduleTrouble() {
   if (!exists) return '还没看到 projects/p2-task-api/src/server.js —— 先写 Day 17 的骨架';
   if (probeCrash)
-    return `加载 src/server.js 时就炸了：\n   ${probeOut.trim().split('\n').slice(0, 3).join('\n   ')}\n   → 先 node --check src/server.js`;
+    return (
+      `加载 src/server.js 时就炸了：\n   ${probeOut.trim().split('\n').slice(0, 3).join('\n   ')}\n` +
+      (probeOut.includes('Cannot find module') || probeOut.includes('ERR_MODULE_NOT_FOUND')
+        ? '   → 这是 **require 的路径 / 包名**写错了（**不是语法问题**：`node --check` 会通过）。\n' +
+          '      常见：把数据库文件当模块 require 了（`require(\'lab.db\')`）、忘了 `require(\'node:path\')` / `require(\'node:fs\')`'
+        : '   → 先 `node --check src/server.js` 看语法；再 `node src/server.js` 跑一次（启动报错会指行号）')
+    );
   if (/buildServer/.test(probeOut)) return '加载时打印了东西（模块不该有副作用）';
   return '⚠️ 上面那行 require 探针的原始输出里可能有线索';
 }
