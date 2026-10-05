@@ -132,6 +132,7 @@ before(async () => {
   if (!ok) return;
   try {
     await startServer();
+    await ensureToken();     // ← 2026-10-05：/tasks 要 token
   } catch (err) {
     console.log(`\n⚠️ buildServer() 起不来：${err.message}\n`);
   }
@@ -141,7 +142,20 @@ after(async () => {
   await closeServer(server);
 });
 
-const get = (p) => fetch(base + p);
+// ── ⚠️ 2026-10-05（Day 19）：/tasks 现在要鉴权了 —— 判据跟着契约一起改 ──
+let TOKEN = null;
+async function ensureToken() {
+  if (TOKEN) return TOKEN;
+  const email = `criteria-${Date.now()}@test.local`;
+  const post = (p, body) =>
+    fetch(base + p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  await post('/auth/register', { email, password: 'criteria-pass-1' });
+  TOKEN = (await (await post('/auth/login', { email, password: 'criteria-pass-1' })).json())?.token ?? null;
+  return TOKEN;
+}
+
+const get = (p) =>
+  fetch(base + p, TOKEN ? { headers: { authorization: `Bearer ${TOKEN}` } } : undefined);
 
 /**
  * 带超时的 GET：服务**崩了 / 没响应**时，判据要能**报错**，而不是把自己挂死。
@@ -152,7 +166,7 @@ async function getOrFail(p, ms = 3000) {
   let timer;
   try {
     return await Promise.race([
-      fetch(base + p),
+      fetch(base + p, TOKEN ? { headers: { authorization: `Bearer ${TOKEN}` } } : undefined),
       new Promise((_, rej) => {
         timer = setTimeout(
           () => rej(new Error(`GET ${p} 在 ${ms}ms 内没有响应 —— 服务大概率崩了（检查有没有统一错误处理），或压根没起来`)),

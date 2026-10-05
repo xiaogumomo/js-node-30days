@@ -125,6 +125,26 @@ async function closeServer(handle) {
   await new Promise((r) => handle.close(() => r()));
 }
 
+// ── ⚠️ 2026-10-05（Day 19）：加了鉴权之后，所有 /tasks 请求都要带 token ──
+//   （判据跟着契约一起改 —— 需求变了，判据也要跟着变，这是纪律的一部分）
+let TOKEN = null;
+async function ensureToken() {
+  if (TOKEN) return TOKEN;
+  const email = `criteria-${Date.now()}-${Math.floor(Math.random() * 1e6)}@test.local`;
+  await fetch(base + '/auth/register', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password: 'criteria-pass-1' }),
+  });
+  const r = await (await fetch(base + '/auth/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password: 'criteria-pass-1' }),
+  })).json();
+  TOKEN = r?.token ?? null;
+  return TOKEN;
+}
+
 /** 带超时的 fetch —— 服务崩了/没响应时要报错，别把判据挂死（2026-10-01 踩过） */
 async function req(method, p, body, ms = 5000) {
   let timer;
@@ -132,7 +152,10 @@ async function req(method, p, body, ms = 5000) {
     const res = await Promise.race([
       fetch(base + p, {
         method,
-        headers: body === undefined ? undefined : { 'content-type': 'application/json' },
+        headers: {
+          ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+          ...(TOKEN ? { authorization: `Bearer ${TOKEN}` } : {}),
+        },
         body: body === undefined ? undefined : JSON.stringify(body),
       }),
       new Promise((_, rej) => {
@@ -159,6 +182,7 @@ before(async () => {
   if (!ok) return;
   try {
     await startServer();
+    await ensureToken();     // ← 2026-10-05：先注册+登录一个用户，后面所有 /tasks 都带它的 token
   } catch (err) {
     console.log(`\n⚠️ buildServer() 起不来：${err.message}\n`);
   }
@@ -277,7 +301,7 @@ test('06 跨进程持久化：换个进程起同一个 DB_FILE，数据还在（
     );
     const created = await fetch(`http://127.0.0.1:${port1}/tasks`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
       body: JSON.stringify({ title: marker }),
     });
     assert.strictEqual(created.status, 201, `往子进程里 POST 应该 201，实际 ${created.status}`);
@@ -296,7 +320,7 @@ test('06 跨进程持久化：换个进程起同一个 DB_FILE，数据还在（
     c2.stderr.on('data', (d) => (log.out += d));
     assert.ok(await waitHealth(port2, 8000), `重启后没起来（PORT=${port2}）。进程输出：\n${log.out.slice(0, 400)}`);
 
-    const list = await (await fetch(`http://127.0.0.1:${port2}/tasks`)).json();
+    const list = await (await fetch(`http://127.0.0.1:${port2}/tasks`, { headers: { authorization: `Bearer ${TOKEN}` } })).json();
     assert.ok(
       Array.isArray(list) && list.some((t) => t?.title === marker),
       `重启之后"${marker}"应该还在 —— 不在就说明数据**只存在内存里**（数组/Map），不是真的写进了数据库文件。\n` +

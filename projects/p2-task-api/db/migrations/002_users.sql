@@ -1,0 +1,11 @@
+
+
+
+CREATE TABLE IF NOT EXISTS users(
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    email  TEXT   NOT NULL UNIQUE,
+    passwordHash TEXT NOT NULL ,
+    createAt  INTEGER NOT NULL DEFAULT 0
+)
+
+
