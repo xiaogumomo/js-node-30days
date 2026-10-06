@@ -67,7 +67,9 @@ function verifyJwt(token){
     
     const same = (a,b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a),Buffer.from(b));
     const want =  crypto.createHmac('sha256',JWT_SECRET).update(parts[0]+'.'+parts[1]).digest('base64url');
-    const payload =  JSON.parse(Buffer.from(parts[1],'base64url').toString());
+    try{
+      let payload =  JSON.parse(Buffer.from(parts[1],'base64url').toString());
+    
     if(payload.exp && Date.now()/1000>payload.exp) return null ;
     if(!same(parts[2],want)){
           return null ;
@@ -76,6 +78,9 @@ function verifyJwt(token){
     }
 
       return payload ;
+    }catch{
+        return null ;
+    }
 }
 
 
@@ -112,7 +117,8 @@ function auth(req,reply){
 
     app.setErrorHandler(async(error,request,reply)=>{
         console.log("💥",error);
-        reply.status(500).send({error:'服务器开小差啦'});
+        const code =error.statusCode ?? 500 ;
+        reply.status(code).send({error:code<500?'请求有问题':'服务器开小差啦'});
 
     });
 
@@ -208,7 +214,7 @@ function auth(req,reply){
 
 //拼装A
 
-
+//注册
 app.post('/auth/register',(req,reply)=>{
    if(!req.body.email.includes('@')|| req.body.password.length<6 ){
     return reply.code(400).send({error:'email必须有@，password必须6位以上'});
@@ -229,7 +235,7 @@ app.post('/auth/register',(req,reply)=>{
 });
 
 
-
+//登陆
 app.post('/auth/login',(req,reply)=>{
     const info = userByEmail.get(req.body.email);
     if(info === undefined){
@@ -266,6 +272,9 @@ app.post('/auth/login',(req,reply)=>{
 
 
  module.exports={buildServer};
+
+
+ module.exports = { buildServer, hashPassword, verifyPassword, signJwt, verifyJwt };
 
 
 
