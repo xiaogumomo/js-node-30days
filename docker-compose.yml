@@ -1,0 +1,35 @@
+
+
+services:
+   app:
+      build:
+        context: projects/p2-task-api #构建上下文路 让Docker Compose在该目录区去找Dockerfile
+        dockerfile: Dockerfile  #在上下文目录中找Dockerfile这个文件
+      ports:
+        - "3000:3000"   #本机端口  宿主机端口:容器端口
+      environment:
+        #协议://用户名:密码@主机:端口/数据库名 postgres:// PostgreSQL协议 
+        # app 数据库用户 secret密码 db	Compose 服务名，会被解析成 db 容器 
+        #5432 PostgreSQL 默认端口 tasks要连接的数据库名
+        DB_URL: postgres://app:secret@db:5432/tasks
+        PORT: 3000
+      depends_on:
+        - db
+      
+      
+   db:
+       #image告诉启动容器时，用哪个镜像  postgres：16-alpineDocker 
+       #官方 PostgreSQL 镜像，主版本 16，基于 Alpine Linux。
+        image: postgres:16-alpine
+       # PostgreSQL 官方镜像认识的变量
+       # POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB（初始化创建数据库tasks）
+        environment:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: tasks
+        #保险锁volumes 命名券pgdata 并存入容器/var/lib/postgresql/data
+        volumes:
+          - pgdata:/var/lib/postgresql/data
+volumes:
+    pgdata:
+      

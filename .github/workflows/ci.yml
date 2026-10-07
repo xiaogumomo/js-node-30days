@@ -1,0 +1,32 @@
+
+name: CI
+on: [push,pull_request]
+
+jobs:
+   test:
+      runs-on: ubuntu-latest   
+      steps: 
+        - uses: actions/checkout@v4
+        
+        - uses: actions/setup-node@v4
+          with:
+             node-version: '24.21.0'
+
+        - uses: pnpm/action-setup@v4
+          with:
+             version: '12.8.1'
+        - name: 装依赖（三个包各自frozen）
+          run: |
+            pnpm install --frozen-lockfile --dir week1-language/p0-toolkit
+            pnpm install --frozen-lockfile --dir projects/p2-task-api
+            pnmp install --frozen-lockfile --dir  projects/p1-cli-organizer
+
+        - name: 类型检查
+          working-directory : week1-language/p0-toolkit
+          run: pnmp exec tsc --noEmit 
+
+        - name: 全局判据（仓库根，自动发现）
+          run: node --test
+
+
+
