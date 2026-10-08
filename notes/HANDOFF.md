@@ -227,6 +227,8 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 | **10/9 开场（执行日）** | ① 先验 docker：`docker --version` / `docker compose version` ✓ ② 用它跑**昨天写的 compose**：`docker compose up -d db` → **Postgres 第一次真跑** ✓ ③ 轮转 **`deepClone` ＋ `countByExt`**（两条欠账）＋ **讲解日 5 分钟**（主题"判据的牙"）④ 主体：**把数据层抽成 `src/db.js`**（本机可跑 ✓）＋ `server.js` 补**优雅退出（SIGTERM）** ⑤ **不加新知识点**（先清账 ✓）|
 | **⭐ 10/8 一条排期教训（关于排法，不是学生能力）** | **认知消耗大的格（过清单 / 复盘打档 / 复习）后面，别再接高强度格（重写实现 / 写新代码）** —— 那天 100 分钟打档（46 条逐条回想）之后，学生已经做不动"再写一块新代码"了 ✗。**正确排法**：**高强度格排在一天的前半段**（他上午修 CI 14 分钟、复盘A（闭卷重写 2 个模块）81 分钟都完成了 ✓），下半段放**抄写 / 清单 / 记账**这类低强度活 ✓ |
 | **⭐ 10/8 两条"学生自己报的账"（都推进了进度表）** | ① **抽考 #11（事件循环六阶段）他答对了，但主动说明"是忘了再去查的"** ✓ → 按抽考口径（**合上材料答得出才算会**）**判"留池"** ✗（恢复动作 → `notes/day09.md`）—— **这种自报比"答对"值钱** ✓✓（正是计划 §六 附录 D 自检要的能力）；② **`deepClone` 闭卷重写 4/4 全绿**，而且**两个错都是他自己发现的**（`x !== undefined` ✗ → 对象永远走第二个分支 → **原样返回 = 等于没克隆**；`for...in` 写成 `for...of` ✗ → `TypeError: not iterable`）→ **这一周最大的缺口（"我验证不了自己的东西"）今天第一次由他自己补上** ✓✓ |
+| **✅ docker 已通（10/8 晚，环境事实，见 §九 也要记一份）** | **Docker Desktop 装在用户级目录** ✓（`C:Users971AppDataLocalProgramsDockerDesktop` —— 所以 `C:Program FilesDocker` 里**没有** ✗，找它要 `find` ✓；CLI 全路径 `...esourcesindocker.exe` ✓）。**装通的三步**：① 重启（WSL 功能生效 ✓ `wsl -l -v` → `docker-desktop Running 2` ✓）② 启动 Docker Desktop（`docker desktop restart` 也行 ✓）③ **配镜像源**（见下）→ `docker run --rm hello-world` → **"Hello from Docker!"** ✓✓ |
+| **⭐⭐ 镜像源配置（中国网络必踩，已解决）** | `registry-1.docker.io` **连不上** ✗（DNS 被污染，解析到 `108.160.162.98` ✗）；实测**能通**的源只有两个：**`docker.1ms.run`** ✓ 与 **`docker.xuanyuan.me`** ✓（都返回 401 = 仓库可达 ✓）；`docker.m.daocloud.io` / `dockerproxy.net` / `hub-mirror.c.163.com` / `mirror.baidubce.com` **全不通** ✗（curl 000）。**做法**：在 **`C:Users971.dockerdaemon.json`**（用户目录，**不在仓库里** ✗）加 `"registry-mirrors": ["https://docker.1ms.run", "https://docker.xuanyuan.me"]`（**保留原有字段** ✓ 原文件已有 `builder.gc` 与 `experimental` ✓ 备份在 `daemon.json.bak` ✓）→ 重启引擎 → `docker info` 的 **Registry Mirrors** 段能看到这两行 ✓ |
 | 结束日 | **10/19（周一）** ✓（10/8 复盘定的；10/9 起是第 4 周：部署 / 可观测 / 面试准备）|
 ### ⏭️ 最新一步（2026-10-07 收工 → **10/8 开工**）
 
@@ -463,13 +465,17 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 
 > 读一下 `notes/HANDOFF.md`，然后继续这个项目。今天是 9/24，Day 10（内置模块）。
 
-### ⭐ 最新开场白（10/8 收工 → 10/9 新会话，直接粘）
+### ⭐ 最新开场白（10/8 收工 → **10/9 新会话**，直接粘）
 
-> 读一下 `notes/HANDOFF.md` §六 最新块，然后继续。今天是 **10/9**，Day 23（执行日）。
+> 读一下 `notes/HANDOFF.md` §六 最新块（**尤其"✅ docker 已通"和"⭐⭐ 镜像源配置"那两行**）＋ §九 的环境事实，然后继续。
+> 今天是 **10/9**，Day 23（**执行日**）。
+>
 > **三句背景**：
-> ① 昨天（10/8 复盘日）**CI 第一次真绿**（`5861767` → success）＋ 第 3 周复盘完成（`notes/week3-review.md`）＋ **结束日定成 10/19**＋ docker 已装（**WSL 功能刚启用、还没重启**）。
-> ② **开场先验 docker**：`wsl --install --no-distribution`（管理员，重启之后跑）→ `docker run --rm hello-world` → **`docker compose up -d db`**（Postgres 第一次真跑）。
-> ③ **今天的任务书 + 判据要新会话写**：主体 = 把数据层抽成 `src/db.js`（本机可跑）＋ `server.js` 补优雅退出（SIGTERM）＋ **JWT 组第二遍默写**（合上写、写不出瞄一眼）。
+> ① 昨天（10/8 复盘日）：**CI 第一次真绿**（`5861767` → success，19s）｜第 3 周复盘完成（`notes/week3-review.md`：46 条打档 ①11 / ②大多数 / ③5 ＋ 轮转表 17 个 ＋ 间隔表真实日期）｜**结束日定成 10/19**｜**Docker 全通了** ✓（WSL2 引擎 `docker-desktop Running` ＋ 镜像源 `docker.1ms.run`/`docker.xuanyuan.me` 配在 `C:Users971.dockerdaemon.json` ✓ ＋ `hello-world` 已跑通 ✓）。
+> ② **开场先收 docker 的尾**：`docker compose ps` 看 `db` 起来没（昨晚 `postgres:16-alpine` 还在拉 ✗、源偏慢）→ 没起来就**在你自己窗口**重跑 `docker compose up -d db`（那样有进度条 ✓）；还慢就用带前缀的完整名 `docker pull docker.1ms.run/library/postgres:16-alpine` ✓ → 起来就是 **Postgres 第一次真跑** ✓。
+> ③ **今天的任务书 + 判据要新会话写**：主体 = ① 把数据层抽成 `projects/p2-task-api/src/db.js`（本机可跑 ✓，三份回归判据现成）② `server.js` 补**优雅退出（SIGTERM，5 行；只能在容器里验）** ③ **JWT 组第二遍默写**（昨天"看了才写得出"→ 判留池 ✓；稿子里 6 类错，其中 `same()` 实参传错是**安全级** ✓）＋ 轮转 `countByExt`（一直欠着）。
+>
+> **收尾抽考两笔**：**#11 事件循环六阶段**（昨天他是**查了材料**才答的 → 留池重考 ✓）｜**#24「看得见 ≠ 落盘」**（昨天"换连接就自动回滚"那个因果环又冒出来一次 ✗）。
 
 或者（作为备份，如果文件读不到）：
 
