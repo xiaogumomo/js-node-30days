@@ -19,11 +19,11 @@ jobs:
           run: |
             pnpm install --frozen-lockfile --dir week1-language/p0-toolkit
             pnpm install --frozen-lockfile --dir projects/p2-task-api
-            pnmp install --frozen-lockfile --dir  projects/p1-cli-organizer
+            pnpm install --frozen-lockfile --dir  projects/p1-cli-organizer
 
         - name: 类型检查
           working-directory : week1-language/p0-toolkit
-          run: pnmp exec tsc --noEmit 
+          run: pnpm exec tsc --noEmit 
 
         - name: 全局判据（仓库根，自动发现）
           run: node --test

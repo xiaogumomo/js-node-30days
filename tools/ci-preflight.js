@@ -110,6 +110,19 @@ if (!wf) {
   record('workflow：至少一条跑测试的命令（node --test / pnpm test）', /node\s+--test|pnpm(\s+-C\s+\S+)?\s+test/.test(wf));
   record('workflow：有触发条件（on: push / pull_request）', /^on:|^\s{0,2}on:/m.test(wf));
 
+  // ⚠️ 10/8 实测：CI **真跑**时红在"装依赖"那一步 —— 注解只给 `exit code 127`（command not found），
+  //    真因是 run 块里 `pnmp install` 拼错（`pnmp/action-setup` 那行改了，run 块里没改）。
+  //    "路径存在 / 关键要素"这类检查**抓不到拼写** → 专门补一条：常见拼错点名。
+  const typoRe = /\b(pnmp|pnm|npmp|pnp|pnpm\w*)\b(?=\s+(?:install|exec|run|add|test))/g;
+  const typos = [...wf.matchAll(typoRe)].map((m) => m[1]).filter((t) => t !== 'pnpm');
+  record(
+    'workflow：命令拼写（run 块里的 pnpm / pnpm exec 之类）',
+    typos.length === 0,
+    typos.length
+      ? `发现疑似拼错：${[...new Set(typos)].join('、')}\n     → CI 上会是 exit 127（command not found），而**注解只会说"exit 127"**，不会告诉你拼错了`
+      : ''
+  );
+
   // 引用的本地路径真的存在吗（working-directory / --dir / -C）
   const dirs = new Set();
   for (const m of wf.matchAll(/working-directory:\s*['"]?([^\s'"]+)/g)) dirs.add(m[1]);
