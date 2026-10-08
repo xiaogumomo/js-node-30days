@@ -36,8 +36,7 @@
 | 判据 | 目标 | 实际 |
 |---|---|---|
 | `node --test test/edge-cases.test.js`（补完 5 条后） | 13 条全绿 |13/13 |
-| `node tools/mutation-check.js` | **抓到 ≥ 10**（满分 13/13） | 
-13/13 ｜ 13/13（先 12/13，补 142 行邮箱 @ → 13/13）|
+| `node tools/mutation-check.js` | **抓到 ≥ 10**（满分 13/13） | 13/13（先 12/13，补 142 行邮箱 @ → 13/13）|
 | 仓库根 `node --test` | 80 条全绿 |  80/80 |
 | 工具箱 `pnpm test` + `tsc --noEmit` | 27 条 / 零错 | 27/27 零错|
 | **`node tools/ci-preflight.js`** | **0 条 ❌（28条检查）** |  28/28 |

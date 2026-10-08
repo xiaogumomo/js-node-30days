@@ -15,77 +15,81 @@ const {parseArgs}= require('node:util');
 
  //计算文件大小，并根据n将对象进行大小排列
 
-
  async function dirSize(dir,n=5){
-    let files = [];
     let fileCount = 0 ;
     let totalBytes = 0;
+    let files = [];
     
-
-    async function walk(current, rel){
-        const entries = await fsp.readdir(current,{withFileTypes : true});
-    
-        for(const entry of entries){
-            const fullPath = path.join(current,entry.name);
-            const relPath = rel ? path.join(rel,entry.name) : entry.name;
-            
-            if(entry.isDirectory()){
-               await walk(fullPath,relPath);
-            }else if(entry.isFile()){
-                const Stats = await fsp.stat(fullPath);
-                fileCount ++ ;
-                totalBytes += Stats.size ;
-                files.push({path:relPath,bytes: Stats.size});
-            }
-       }
+    async function walk(crruent,ext){
+         const entires = await fsp.readdir(crruent,{withFileTypes:true});
+         
+         
+         for(const emtry of entires){
+         const fullPath = path.join(crruent,emtry.name);
+         const dirPath = ext? path.join(ext,emtry.name) : emtry.name;
+         if(emtry.isDirectory()){
+           await  walk(fullPath,dirPath);
+         }else if(emtry.isFile()){
+            const stats = await fsp.stat(fullPath);
+            fileCount++;
+            totalBytes +=  stats.size;
+            files.push({path:dirPath,bytes: stats.size});
+         }
+         }
        
-
     }
-     await walk(dir,'');
-     let largest = files.sort((a,b)=>b.bytes-a.bytes).slice(0,n);
-     
-     return{largest ,fileCount,totalBytes};
-  
- }
+
+    await walk(dir,'');
+    const largest =files.sort((a,b)=>b.bytes-a.bytes).slice(0,n);
+    
+    return {fileCount,totalBytes,largest};
+}
 
 
- async function main(){
-    const {values,positionals} =parseArgs({
-        args:process.argv.slice(2),
+
+async function main(){
+    const {values,positionals}=parseArgs({
+        args: process.argv.slice(2),
         options:{
-            top:{type:"string",default:'5'},
-            json:{type:'boolean'}
-        }, 
-        allowPositionals:true,
+            top:{
+                type:'string',
+                default: '5',
+            },
+            json:{
+                type:'boolean',
+                default: false,
+            }
+        },
+        allowPositionals:true 
     });
-    const top = Number(values.top);
-    const dir =  positionals[0]||'.';
-    try{
-        const report = await dirSize(dir,top);
 
-        if(values.json){
-            console.log(JSON.stringify(report , null ,2));
-            return;
-        }
-        
-        console.log(`目录${dir}`);
-        console.log(`一共有文件${report.fileCount}个,文件大小一共${report.totalBytes}bytes`);
-        if(report.largest.length === 0){
-            return console.log('这个目录中没有文件');
-        } 
-        console.log(`一共有${report.largest.length}个最大文件`);
-        for(const f of report.largest){
-            console.log(`文件${String(f.bytes).padStart(8)}${f.path}`);
-        }
+    const dir = positionals[0]||'.';
+    const top = Number(values.top);
+
+    try{
+       const report = await dirSize(dir,top);
+       if(values.json){
+         return console.log(JSON.stringify(report,null,2));
+       }
+       console.log(`目录${dir}`);
+       console.log(`文件的个数一共${report.fileCount},文件总大小一共${report.totalBytes}`);
+       if(report.largest.length === 0){
+        throw new Error('这个目录没有文件')
+       }
+       console.log(`最大的文件一共${report.largest.length}`);
+       for(let i =0 ; i<report.largest.length ; i++){
+        console.log(`文件名：${String(report.largest[i].path).padStart(8)}${report.largest[i].bytes}`);
+       }
     }catch(err){
-        console.error(`文件目录不存在${dir}(${err.code}||${err.message}`);
-        process.exitCode = 1 ;
+        console.error(`没有这个目录${dir}(${err.code}||${err.message})`);
+        process.exitCode = 1;
     }
 }
 
 
 if(require.main === module) main();
-module .exports= {dirSize};
+
+module.exports = {dirSize};
 
  
 

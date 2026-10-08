@@ -51,19 +51,19 @@
 
 | # | 实验 | 我的预期 | 实际 | 记下的"为什么" |
 |---|---|---|---|---|
-| 1 | 建表（主键/NOT NULL/DEFAULT）+ 插 3 行 + 查出来 | |[
-  [Object: null prototype] { id: 1, title: '写周报', done: 0 },
-  [Object: null prototype] { id: 2, title: '看文档', done: 0 },
-  [Object: null prototype] { id: 3, title: '跑步', done: 0 }
-] | |
-| 2 | 事务：两条 `INSERT` 中间故意抛错 → `ROLLBACK` | 错一个就回滚| 已回滚：故意炸
-[
-  [Object: null prototype] { id: 1, title: '写周报', done: 0 },
-  [Object: null prototype] { id: 2, title: '看文档', done: 0 },
-  [Object: null prototype] { id: 3, title: '跑步', done: 0 }
-]| |
+| 1 | 建表（主键/NOT NULL/DEFAULT）+ 插 3 行 + 查出来 | | 3 行（原始输出见表格下方）| |
+| 2 | 事务：两条 `INSERT` 中间故意抛错 → `ROLLBACK` | 错一个就回滚 | 已回滚：故意炸（查出来还是原来 3 行）| |
 | 3 | 索引：1 万行，建索引**前 / 后**两个耗时 | 前 __0.76__ ms | 后 __0.18__ ms | |
 | 4 | Postgres vs SQLite 的 3 处差异（4 行笔记）| | | |
+
+**原始输出（实验 1 / 2）**：
+
+```
+实验 1：[Object: null prototype] { id: 1, title: '写周报', done: 0 }
+        [Object: null prototype] { id: 2, title: '看文档', done: 0 }
+        [Object: null prototype] { id: 3, title: '跑步', done: 0 }
+实验 2（ROLLBACK 之后）：同上 3 行（回滚成功）
+```
 
 
 事务小实验：把 COMMIT 和 ROLLBACK 都删掉 → 再跑 → 看条数是 3 还是 4？ 
