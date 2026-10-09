@@ -216,7 +216,18 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 
 ## 六、下一步（**10/2 = 上午第 2 周复盘 + 下午 Day 17**；10/1 那天没做，已按规则延期一天）
 
-### ⏭️ 最新一步（2026-10-08 收工 → **10/9 开工**）
+### ⏭️ 最新一步（2026-10-09 收工 → **10/10 开工**）
+
+| 项 | 状态 |
+|---|---|
+| **10/9（Day 23 执行日）成绩** | ① **docker 收尾 → Postgres 第一次真跑**（`js-node-30days-db-1` Up ＋ `PostgreSQL 16.15` ＋ `psql` 真回话）② **讲解日 5 分钟**"判据的牙"（欠账清掉；超时 20 分钟已记账）③ **数据层抽成 `src/db.js`**：**39/39 全绿**（对外行为一字未变）＋ 突变 **13/13**（升级双靶子后；升级前 10/13 = "靶子随重构搬家"）④ **优雅退出**（SIGTERM/SIGINT ＋ `onClose` 关库）→ 容器里 `docker stop` **日志两行都在** = 干净退出 ⑤ **轮转**：`deepClone` 全绿 ＋ `countByExt` 修后 **8/8** ⑥ **服务活体**：真服务 curl 全流程（建 / 查 / **隔离 404**）⑦ **LeetCode 首题**：Two Sum **通过 65/65**（74ms / 击败 7.78% = O(n²) 暴力解 → 明日写 O(n) 哈希表版）⑧ 抽考：**#11 留池**、**#24 出池**（那条磨了两次的错误因果环，今天讲对了）|
+| **今天最值钱的三条教训** | ① **搬家 = 复制，不是重打**：db.js 重打引入 **9 处**错（**3 处静默**：`DBFILE` / `task.db` / 缺 `mkdirSync`；5 处响；丢 `ORDER BY id`）→ 新护栏：**搬家类改动要"关键名字对账"**（行为判据对**静默改名**是无牙的）② **判据的牙有针对性**：值 / 行为类坏（`NaN`、越权）咬得住；**命名 / 路径 / 顺序**类咬不住（要另一类判据）③ **"我写了" ≠ "它真生效"**：一天撞 4 次（mutation 靶子 / `onClose` 关库 / SIGTERM 真跑到 / `co` 半截）→ 每次的分界都是一条**具体证据** |
+| **顺手抓到的真问题（都进账）** | ① **`server.test.js` 没有库隔离**（0 处 `DB_FILE`/`mkdtemp`）→ 每次跑仓库测试都往**真库**塞一个 `criteria-*@test.local` 用户（已积 24 个）→ 补 3 行隔离 ② **Fastify 默认 `host='localhost'`** → 容器里绑 127.0.0.1 → **外部访问不到**（双向实测：宿主 exit 52 ／ 容器内 `{"ok":true}`）→ 部署必改 `host:'0.0.0.0'` ③ **PowerShell `Invoke-RestMethod` 不按 UTF-8 编码字符串 body** → 中文变成 `?`（**静默、数据真坏**，库里就是 `"???"`）→ 见 §九 对策 |
+| **⛔ AI 今天两条账** | ① 我给的 `openDb()` 示范**只给了形状、没标"这一行必须写在 `buildServer()` 里"** → 他放到了模块顶层（＝ 我上一条消息刚警告过的坑②，示范里却没点出来）→ **规矩：示范要连"不许放哪"一起给** ② 我把 `mutation-check` 的预期写成 **13/13**，实际应是 **10/13** → **规矩：给判据前先核"工具的假设"**（它当时只认单文件）|
+| **10/10（Day 24）主线** | **换数据库引擎：sqlite → Postgres**（10/8 定的"拆两步"，装的部分 10/9 已完成 ✓）→ 任务书 **`notes/day24-postgres.md`** |
+| 结束日 | **10/19（周一）** 保持 ✓（10/9 的净损失约 1–1.5 小时被下午吸收）|
+
+### ⏭️ 上一版（2026-10-08 收工 → **10/9 开工**）
 
 | 项 | 状态 |
 |---|---|
@@ -224,12 +235,12 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 | **今天的时间账** | 轮转 17/20 ✓ ｜ 修 CI **14/20** ✓ ｜ 复盘A **81/60**（+21）｜ 复盘B **~100/20**（**+80** ✗ **AI 排期错**：过清单该按**每条 2 分钟**估 ✓）｜ 复盘C 显示的 80m 是**误记**（学生点错格，那 80 分钟其实在打档）→ **今天净超时 ≈ 95 分钟** |
 | **⭐ 今天的三个发现** | ① **判据的牙被真文件撞了三次**（`mutation-check` 的 M11/M13 形态太窄 / `06` 被邮箱规则挡住的 M10 漏网 / compose 的 `db:` 缩进 → **5 条检查全绿而结构全错**）→ **"有没有牙"要一条断言一条断言地看** ✓ ② **本机的绿 ≠ 云端的绿**（preflight 28/28 全绿、CI 红 ✗）→ 已补第 29 条（命令拼写）✓ ③ **`pnpm dlx <工具>` 手拉一个来验**（`js-yaml` 验 YAML、给出行列 ✓）|
 | **⛔ AI 今天两条账** | ① **一条指令塞了两处改动**（"改名 ＋ 包成 `() =>`" ✗）→ 学生只改一半、白跑一轮 ✓ → **新规矩：一条指令只含一处改动，两处就写两条** ✓ ② **复盘"住哪"指针不精确**（6 行指向 **AI 写的任务书** ✗、§四那列还被串列 ✗）→ **学生自己纠正了 §三 的指针** ✓ → **新规矩：指针优先指【他自己的笔记/日志】，写清 `文件:行号` 或 `§X 第N条`；代码用 `文件:行号`；他自己的材料里没有才给 URL** ✓ |
-| **10/9 开场（执行日）** | ① 先验 docker：`docker --version` / `docker compose version` ✓ ② 用它跑**昨天写的 compose**：`docker compose up -d db` → **Postgres 第一次真跑** ✓ ③ 轮转 **`deepClone` ＋ `countByExt`**（两条欠账）＋ **讲解日 5 分钟**（主题"判据的牙"）④ 主体：**把数据层抽成 `src/db.js`**（本机可跑 ✓）＋ `server.js` 补**优雅退出（SIGTERM）** ⑤ **不加新知识点**（先清账 ✓）|
+| **10/9（⚠️ 12:30 改道：检阅取消 → 复习日取消，恢复执行日；上午已落 docker 尾 / 讲解日 / JWT 默写 4/4，下午接主体 → `notes/day23-exec.md`）** | ① 先验 docker：`docker --version` / `docker compose version` ✓ ② 用它跑**昨天写的 compose**：`docker compose up -d db` → **Postgres 第一次真跑** ✓ ③ 轮转 **`deepClone` ＋ `countByExt`**（两条欠账）＋ **讲解日 5 分钟**（主题"判据的牙"）④ 主体：**把数据层抽成 `src/db.js`**（本机可跑 ✓）＋ `server.js` 补**优雅退出（SIGTERM）** ⑤ **不加新知识点**（先清账 ✓）|
 | **⭐ 10/8 一条排期教训（关于排法，不是学生能力）** | **认知消耗大的格（过清单 / 复盘打档 / 复习）后面，别再接高强度格（重写实现 / 写新代码）** —— 那天 100 分钟打档（46 条逐条回想）之后，学生已经做不动"再写一块新代码"了 ✗。**正确排法**：**高强度格排在一天的前半段**（他上午修 CI 14 分钟、复盘A（闭卷重写 2 个模块）81 分钟都完成了 ✓），下半段放**抄写 / 清单 / 记账**这类低强度活 ✓ |
 | **⭐ 10/8 两条"学生自己报的账"（都推进了进度表）** | ① **抽考 #11（事件循环六阶段）他答对了，但主动说明"是忘了再去查的"** ✓ → 按抽考口径（**合上材料答得出才算会**）**判"留池"** ✗（恢复动作 → `notes/day09.md`）—— **这种自报比"答对"值钱** ✓✓（正是计划 §六 附录 D 自检要的能力）；② **`deepClone` 闭卷重写 4/4 全绿**，而且**两个错都是他自己发现的**（`x !== undefined` ✗ → 对象永远走第二个分支 → **原样返回 = 等于没克隆**；`for...in` 写成 `for...of` ✗ → `TypeError: not iterable`）→ **这一周最大的缺口（"我验证不了自己的东西"）今天第一次由他自己补上** ✓✓ |
-| **✅ docker 已通（10/8 晚，环境事实，见 §九 也要记一份）** | **Docker Desktop 装在用户级目录** ✓（`C:Users971AppDataLocalProgramsDockerDesktop` —— 所以 `C:Program FilesDocker` 里**没有** ✗，找它要 `find` ✓；CLI 全路径 `...esourcesindocker.exe` ✓）。**装通的三步**：① 重启（WSL 功能生效 ✓ `wsl -l -v` → `docker-desktop Running 2` ✓）② 启动 Docker Desktop（`docker desktop restart` 也行 ✓）③ **配镜像源**（见下）→ `docker run --rm hello-world` → **"Hello from Docker!"** ✓✓ |
+| **✅ docker 已通（10/8 晚，环境事实，见 §九 也要记一份）** | **Docker Desktop 装在用户级目录** ✓（`C:Users971AppDataLocalProgramsDockerDesktop` —— 所以 `C:Program FilesDocker` 里**没有** ✗，找它要 `find` ✓；CLI 全路径 `...esourcesindocker.exe` ✓）。**装通的三步**：① 重启（WSL 功能生效 ✓ `wsl -l -v` → `docker-desktop Running 2` ✓）② 启动 Docker Desktop（`docker desktop restart` 也行 ✓）③ **配镜像源**（见下）→ `docker run --rm hello-world` → **"Hello from Docker!"** ✓✓。⚠️ **但当晚 `docker compose up -d db` 的 `postgres:16-alpine` 拉取中断了**（`unexpected EOF` ✗：小镜像能过、80MB 的大 blob 会断）→ **10/9 换个源重试**（见 §八 开场白 ②）|
 | **⭐⭐ 镜像源配置（中国网络必踩，已解决）** | `registry-1.docker.io` **连不上** ✗（DNS 被污染，解析到 `108.160.162.98` ✗）；实测**能通**的源只有两个：**`docker.1ms.run`** ✓ 与 **`docker.xuanyuan.me`** ✓（都返回 401 = 仓库可达 ✓）；`docker.m.daocloud.io` / `dockerproxy.net` / `hub-mirror.c.163.com` / `mirror.baidubce.com` **全不通** ✗（curl 000）。**做法**：在 **`C:Users971.dockerdaemon.json`**（用户目录，**不在仓库里** ✗）加 `"registry-mirrors": ["https://docker.1ms.run", "https://docker.xuanyuan.me"]`（**保留原有字段** ✓ 原文件已有 `builder.gc` 与 `experimental` ✓ 备份在 `daemon.json.bak` ✓）→ 重启引擎 → `docker info` 的 **Registry Mirrors** 段能看到这两行 ✓ |
-| 结束日 | **10/19（周一）** ✓（10/8 复盘定的；10/9 起是第 4 周：部署 / 可观测 / 面试准备）|
+| 结束日 | **10/19（周一）** ✓（10/8 复盘定的）→ 10/9 复习日取消（检阅取消）→ **维持 10/19**（收尾按当天实际再核） |
 ### ⏭️ 最新一步（2026-10-07 收工 → **10/8 开工**）
 
 | 项 | 状态 |
@@ -472,7 +483,7 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 >
 > **三句背景**：
 > ① 昨天（10/8 复盘日）：**CI 第一次真绿**（`5861767` → success，19s）｜第 3 周复盘完成（`notes/week3-review.md`：46 条打档 ①11 / ②大多数 / ③5 ＋ 轮转表 17 个 ＋ 间隔表真实日期）｜**结束日定成 10/19**｜**Docker 全通了** ✓（WSL2 引擎 `docker-desktop Running` ＋ 镜像源 `docker.1ms.run`/`docker.xuanyuan.me` 配在 `C:Users971.dockerdaemon.json` ✓ ＋ `hello-world` 已跑通 ✓）。
-> ② **开场先收 docker 的尾**：`docker compose ps` 看 `db` 起来没（昨晚 `postgres:16-alpine` 还在拉 ✗、源偏慢）→ 没起来就**在你自己窗口**重跑 `docker compose up -d db`（那样有进度条 ✓）；还慢就用带前缀的完整名 `docker pull docker.1ms.run/library/postgres:16-alpine` ✓ → 起来就是 **Postgres 第一次真跑** ✓。
+> ② **开场先收 docker 的尾**（10/8 晚实测：`hello-world` **拉到了并跑通** ✓，但 **`postgres:16-alpine` 那次拉取中断了** ✗ —— 卡在 `25b77f59fd95 Downloading 20.97MB` 然后 **`unexpected EOF`** ✓ 也就是说**小镜像能过、大 blob 会断** ✗）。**动作**：先启动 Docker Desktop（10/8 21:32 时引擎是停的 ✓）→ **换源**（把 `docker.xuanyuan.me` 写到 `registry-mirrors` 第一位 ✓）或**直接指定源** `docker pull docker.1ms.run/library/postgres:16-alpine`（拉完 `docker tag` 成 `postgres:16-alpine` ✓）→ 再 `docker compose up -d db` ✓ → 起来就是 **Postgres 第一次真跑** ✓。
 > ③ **今天的任务书 + 判据要新会话写**：主体 = ① 把数据层抽成 `projects/p2-task-api/src/db.js`（本机可跑 ✓，三份回归判据现成）② `server.js` 补**优雅退出（SIGTERM，5 行；只能在容器里验）** ③ **JWT 组第二遍默写**（昨天"看了才写得出"→ 判留池 ✓；稿子里 6 类错，其中 `same()` 实参传错是**安全级** ✓）＋ 轮转 `countByExt`（一直欠着）。
 >
 > **收尾抽考两笔**：**#11 事件循环六阶段**（昨天他是**查了材料**才答的 → 留池重考 ✓）｜**#24「看得见 ≠ 落盘」**（昨天"换连接就自动回滚"那个因果环又冒出来一次 ✗）。
@@ -486,7 +497,7 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 ## 九、环境事实速查（都已实测，省下重新试错的时间）
 
 **项目 2 的技术选型（2026-10-05 实测，**别再重选**）**
-- **数据层：`node:sqlite`（Node 24 内置，零依赖）** —— `new DatabaseSync(file)` / `db.exec(建表SQL)` / `db.prepare(...)` + `.run|get|all(参数)` ✓
+- **数据层：`node:sqlite`（Node 24 内置，零依赖）** —— ⚠️ **2026-10-10 起换成 Postgres**（见 `notes/day24-postgres.md`；下面这段留作 sqlite 期的记录）：`new DatabaseSync(file)` / `db.exec(建表SQL)` / `db.prepare(...)` + `.run|get|all(参数)` ✓
   ⚠️ **`db.exec()` 不接受参数**（里头的 `?` 没人填 → 当 NULL；要带参数**必须** `prepare` + `run/get/all`）；**`prepare` 时会立刻校验表和列名**（列名拼错 → 启动就炸 ✓）
 - **密码哈希：`node:crypto` 的 `scryptSync`**（随机盐 + `timingSafeEqual`）；**JWT 手写 HS256**（`createHmac` + `base64url`）→ **不装任何数据库 / 哈希 / JWT 依赖** ✓（bcrypt / argon2 在 Windows 上要编译，故意不用）
 - 迁移：**简化版**（`PRAGMA table_info(tasks)` 先查再改 → 幂等 ✓）；数据文件 `data/tasks.db`（`.gitignore` 的 `*.db` 挡住 ✓）
@@ -502,6 +513,16 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 - `node 文件.ts` **能直接跑**（Node 24 类型剥离）；`node --test` **会自动发现 `*.test.ts`**；`require('../src/x.ts')` 也能用 → **不需要 Vitest / tsx**（Vitest 挪到第 3 周）。
 - 递归函数报 `TS7023` / `TS7024` 时要**显式写返回类型**；"递归藏在回调里"才报，纯自递归 `return f(x)` 反而不报；断环写在外层或内层**任一**都行。
 - ⚠️ **`package.json` 被追加过尾部垃圾**会报 `trailing characters at line 15 column 1` —— **看起来像源码文件的错**，实际杀 pnpm / tsc / Node 三件套。**JSON 只能有一个顶层 `{}`。**
+
+**Docker / Postgres / Windows 客户端（2026-10-09 实测）**
+- **Postgres 现在真跑着**：`docker compose up -d db` → 容器 `js-node-30days-db-1`（`postgres:16-alpine`，**故意不映射主机端口**）。验证两条：`docker compose ps`（Up）＋ `docker compose exec db psql -U app -d tasks -c "select version();"`（→ `PostgreSQL 16.15`）。连接串：本机 = `postgres://app:secret@localhost:5432/tasks`，**容器内**才用服务名 `db`。
+- ⚠️ **`docker compose` 必须在 compose 文件所在目录跑**，否则报 `no configuration file provided: not found`（`docker` 找的是当前目录，不是仓库根）。
+- ⚠️ **镜像源拉大 blob 会断**：`docker.1ms.run` 上小层全过、111MB 那层报 `unexpected EOF` → **原地重试 1–2 次通常就过**（10/9 实测第 2 次成功）。
+- 容器名规律：`<目录名>-<服务名>-<序号>`（例 `js-node-30days-app-1`）。**用 `docker compose stop app` 比记容器名好**；`docker compose ps -a` 的 STATUS 里 **`Exited (0)` = 干净退出、`137` = 被 SIGKILL 强杀**。
+- ⚠️ **端口 3000 上会有三个监听**（`node.exe`=127.0.0.1 你自己的服务；`com.docker.backend.exe`=0.0.0.0；`wslrelay.exe`=[::1] 后两个是 docker 的）→ **别杀后两个**（杀了 docker 端口映射就废，要重启 Docker Desktop）。
+- ⚠️ **Fastify 的 `listen` 默认 `host='localhost'`** → 容器里绑 127.0.0.1 → 端口映射到不了（宿主 `curl` 得到空响应 exit 52，容器内自己打却正常）→ **容器/线上必须显式 `host:'0.0.0.0'`**。
+- ⚠️ **PowerShell 的 `Invoke-RestMethod`**：① json body 用单引号字符串 `'{"a":1}'` ✓（要插变量时才用反引号转义 `` `" ``）② **不指定 charset 时它用非 UTF-8 编码字符串 body → 中文被替换成 `?`**（静默、**真写坏数据**）→ 要传中文就 `-ContentType 'application/json; charset=utf-8'`，或**改由 Node 发请求**（Node 默认 UTF-8 ✓）③ 它遇非 2xx **抛异常**（不是打印状态码）→ 判 404 得用 `try/catch`。
+- **`mutation-check` 现在是双靶子**：`--impl`（默认 `src/server.js`）＋ `--impl2`（默认 `src/db.js`）—— M5/M6/M7 的锚点（SQL 串）住在 `db.js`，主靶子找不到时自动去第二靶子。
 
 **Git**
 - 判断"推送成功"：`git ls-remote --heads origin main`（**直接问远程**，绕过本地缓存）和 `git rev-parse HEAD` 比 SHA。

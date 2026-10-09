@@ -7,36 +7,18 @@
 // 没有扩展名的（'README' / 'Makefile'）	键是空字符串 ''（path.extname 就是这么返回的）：countByExt(['README']) → {'': 1}
 // 大小写	原样算（'.JS' 和 '.js' 算两个键）—— 这是本题的规定，不是通用真理
 // 原数组	不能改
-const path = require("node:path");
 
-function countByExt(paths){
+
+const path = require('node:path');
+function countByExt(arr){
     let result = {};
-    let arr = [];
-    for(let i =0 ; i <paths.length;i++){
-        arr[i]=path.extname(paths[i]);
-    }
+    for(let i = 0 ; i< arr.length  ; i++){
+        
+        const key= path.extname(arr[i]);
+         result[key]= (result[key]?? 0)+1 ;
+        
+     }
 
-    for(let key of arr){
-        result[key] = (result[key]??0)+1 ;
-    }
-    return result ;
+     return result ;
 }
-
-
-
-//故意红版
-// function countByExt(paths){
-//     let result = {};
-//     let arr = [];
-//     for(let i =0 ; i <paths.length;i++){
- //    arr[i]=path.extname(paths[i]);
-//     
-//     }
-
-//     for(let key of arr){
-//         result[key] = result[key]??0+1 ;
-//     }
-//     return result ;
-// }
-
     module.exports ={countByExt};

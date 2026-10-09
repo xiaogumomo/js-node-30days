@@ -2,26 +2,20 @@
 
 
 
-
-
-
-
-
-
 function deepClone(x){
-    if(typeof x !== 'object'|| x === null){
-        return x;
+    if(typeof x !== 'object' || x === null){
+        return x ;
     }
 
     if(Array.isArray(x)){
-        return x.map((i)=>deepClone(i));
+        return x.map((item)=>deepClone(item));
     }
 
-    let result ={};
-    for(let i in x){
-        result[i]=deepClone(x[i]);
+    let result = {};
+    for(const key in x){
+        result[key] = deepClone(x[key]);
     }
     return result ;
 }
 
-module. exports ={deepClone};
+module .exports = {deepClone};
