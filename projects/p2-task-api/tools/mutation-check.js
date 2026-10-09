@@ -60,7 +60,10 @@ const opt = (name, dflt) => {
 };
 // --file 给仓库内的相对路径（默认 test/edge-cases.test.js）；也给绝对路径（AI 做工具自检时用）
 const FILE_ARG = opt('--file', path.join('test', 'edge-cases.test.js'));
-const IMPL_ARG = opt('--impl', path.join('src', 'server.js'));   // 同上：默认仓库内，绝对路径也收
+const IMPL_ARG = opt('--impl', path.join('src', 'server.js'));
+// ⚠️ 2026-10-09：第二靶子。数据层抽成 src/db.js 之后，M5/M6/M7 的锚点（SQL 字符串）
+//    跟着搬了过去 —— 主靶子上找不到锚点时，工具会再到这个文件上试一次。
+const IMPL2_ARG = opt('--impl2', path.join('src', 'db.js'));   // 同上：默认仓库内，绝对路径也收
 const KEEP = flag('--keep');
 const ONLY = opt('--only', '')
   .split(',')
@@ -255,16 +258,25 @@ if (testCount < 6) {
 
 const baseSrc = fs.readFileSync(IMPL_ABS, 'utf8');
 
+// 第二靶子：存在就加载（重构后 SQL 住在 src/db.js）
+const IMPL2_ABS = path.isAbsolute(IMPL2_ARG) ? IMPL2_ARG : path.join(ROOT, IMPL2_ARG);
+const HAS_IMPL2 = fs.existsSync(IMPL2_ABS) && path.resolve(IMPL2_ABS) !== path.resolve(IMPL_ABS);
+const baseSrc2 = HAS_IMPL2 ? fs.readFileSync(IMPL2_ABS, 'utf8') : null;
+const IMPL2_REL = HAS_IMPL2 ? path.basename(IMPL2_ABS) : null;
+
 // ── 3. 搭一次性实验室（系统临时目录；真文件一个都不动）───────
 const lab = fs.mkdtempSync(path.join(os.tmpdir(), 'p2-mut-'));
 const MIG_SRC = path.join(ROOT, 'db', 'migrations');
 const PKG_SRC = path.join(ROOT, 'package.json');
 
-function makeVariant(id, src) {
+function makeVariant(id, src, targetRel = path.basename(IMPL_ABS)) {
   const dir = path.join(lab, id);
-  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.mkdirSync(path.join(dir, 'test'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'src', 'server.js'), src);
+  // ⚠️ 2026-10-09：整个 src/ 一起搬进实验室。
+  //    因为数据层抽成了 src/db.js —— 只搬 server.js 会让 require('./db') 当场失败，
+  //    于是 13 条**全部**报"无法判定"（工具对"项目只有一个源文件"的假设露出来了）。
+  fs.cpSync(path.join(ROOT, 'src'), path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', targetRel), src); // 再盖成突变版（默认 server.js；突变住在第二靶子时就是它）
   fs.cpSync(MIG_SRC, path.join(dir, 'db', 'migrations'), { recursive: true });
   fs.copyFileSync(PKG_SRC, path.join(dir, 'package.json'));
   const testDst = path.join(dir, TEST_REL);
@@ -425,7 +437,16 @@ if (baseFails.size) {
 const rows = [];
 for (const mut of picked) {
   process.stdout.write(`  ${mut.id} ${mut.name} …… `);
-  const ap = applyMutation(baseSrc, mut);
+  let ap = applyMutation(baseSrc, mut);
+  let targetRel = path.basename(IMPL_ABS);
+  if (ap.applyFail && baseSrc2) {
+    // 锚点可能随重构搬到了第二靶子（例：SQL 从 server.js 搬进 db.js）
+    const ap2 = applyMutation(baseSrc2, mut);
+    if (!ap2.applyFail) {
+      ap = ap2;
+      targetRel = IMPL2_REL;
+    }
+  }
   if (ap.applyFail) {
     console.log(yellow('找不到锚点'));
     rows.push({ mut, status: 'applyFail', detail: ap.applyFail, caughtBy: [] });
@@ -438,7 +459,7 @@ for (const mut of picked) {
   }
   let res;
   try {
-    const dir = makeVariant(mut.id, ap.src);
+    const dir = makeVariant(mut.id, ap.src, targetRel);
     res = runTests(dir);
   } catch (e) {
     console.log(red(`搭实验室失败：${e.message}`));

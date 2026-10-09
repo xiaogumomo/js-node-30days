@@ -7,6 +7,8 @@ const crypto =require('node:crypto');
 const  path =require("node:path");
 const fs = require('node:fs');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-初始秘钥';
+const {openDb} = require('./db.js');
+
 
 function hashPassword(pw){
      //造盐 
@@ -99,6 +101,7 @@ function auth(req,reply){
    
 
  function buildServer(){
+    const { ins, one, all, upd, toObj, insertUser, userByEmail, del } = openDb();
      const app = fastify();
 
 
@@ -126,41 +129,6 @@ function auth(req,reply){
     app.addHook('onRequest',async(req)=>{
         console.log(`${new Date().toISOString()}${req.method}${req.url}`);
     });
-
-
-    //CRUD
-    //块1 取表填表  ① dbFile → ② mkdir → ③ new DatabaseSync
-    //  → ④ 建表 + 加列（迁移）→ ⑤ prepare 语句 → ⑥ 路由 → return app
-
-    // ① dbFile
-    const dbFile = process.env.DB_FILE || path.join(__dirname,'..','data','tasks.db');//__dirname该文件的目录的绝对地址
-    // ② mkdir
-    fs .mkdirSync(path.dirname(dbFile),{recursive:true}); 
-
-    // ③ new DatabaseSync
-    const db = new DatabaseSync(dbFile);//创建SQLite 数据库连接对象,对一个文件进行管理
-
-
-    //④ 建表 + 加列（迁移）
-    const MIG_DIR = path.join(__dirname,"..",'db','migrations');
-
-   for (const f of ['001_init.sql','002_users.sql']){
-    db.exec(fs.readFileSync(path.join(MIG_DIR,f),"utf8"));
-    }
-   const 列 = db.prepare (`PRAGMA table_info(tasks) `).all().map((c)=>c.name);
-
-   if(!列.includes(`userId`)) db.exec(`ALTER TABLE tasks ADD COLUMN userId INTEGER`);//往tasks中加一列userId
-
-
-    //⑤ prepare 语句
-    const ins = db.prepare(`INSERT INTO tasks(title,done,userId)VALUES(?,?,?)`);//插入一列
-    const one = db.prepare(`SELECT id , title ,done FROM tasks WHERE id = (?)AND userId = (?)`);//检索三列
-    const all = db.prepare('SELECT id ,title, done FROM tasks WHERE userId = ? ORDER BY id');//取出三列
-    const upd = db.prepare('UPDATE tasks SET title = ? , done = ? WHERE id = ? AND userId = ?');//修改具体值
-    const toObj = (r)=>(r?{id: Number(r.id),title:r.title,done:!!r.done}:null);//!!r.done强行变为布尔值
-    const insertUser= db.prepare(`INSERT INTO users(email,passwordHash,createAt) VALUES (?,?,?)`);
-    const userByEmail=db.prepare(`SELECT*FROM users WHERE email = (?)`);
-    const del = db.prepare('DELETE FROM tasks WHERE id = ? AND userId = ? ');
 
     
     //  ⑥ 路由
@@ -271,10 +239,9 @@ app.post('/auth/login',(req,reply)=>{
  }
 
 
- module.exports={buildServer};
 
 
- module.exports = { buildServer, hashPassword, verifyPassword, signJwt, verifyJwt };
+module.exports = { buildServer, hashPassword, verifyPassword, signJwt, verifyJwt };
 
 
 
