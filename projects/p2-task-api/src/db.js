@@ -21,13 +21,13 @@ function openDb(){
 
     const ins = db.prepare(`INSERT INTO tasks(title,done,userId)VALUES(?,?,?)`);
     const one = db.prepare(`SELECT id,title, done FROM tasks WHERE id =(?) AND userId = (?)`);
-    const all = db.prepare(`SELECT id,title,done FROM tasks WHERE userId = ?`);
+    const all = db.prepare(`SELECT id,title,done FROM tasks WHERE userId = ? ORDER by id`);
     const upd = db.prepare(`UPDATE tasks SET title = ? , done = ? WHERE id = ? AND userId = ?`);
     const toObj = (r)=>(r?{id:Number(r.id),title: (r.title),done: !!r.done }:null);
     const insertUser = db.prepare(`INSERT INTO users(email,passwordHash,createAt) VALUES (?,?,?)`)
     const userByEmail =db.prepare(`SELECT*FROM users WHERE email = ?`);
     const del = db.prepare(`DELETE FROM tasks WHERE id = ? AND userId = ?`);
     
-    return {all,ins,one,upd,toObj,insertUser,userByEmail,del};
+    return {db,all,ins,one,upd,toObj,insertUser,userByEmail,del};
 }   
 module.exports ={openDb};

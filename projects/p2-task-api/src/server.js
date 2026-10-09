@@ -101,7 +101,7 @@ function auth(req,reply){
    
 
  function buildServer(){
-    const { ins, one, all, upd, toObj, insertUser, userByEmail, del } = openDb();
+    const { db,ins, one, all, upd, toObj, insertUser, userByEmail, del } = openDb();
      const app = fastify();
 
 
@@ -129,6 +129,8 @@ function auth(req,reply){
     app.addHook('onRequest',async(req)=>{
         console.log(`${new Date().toISOString()}${req.method}${req.url}`);
     });
+
+    app.addHook(`onClose`,async()=>await db.close());
 
     
     //  ⑥ 路由
@@ -232,10 +234,31 @@ app.post('/auth/login',(req,reply)=>{
 
 
  if(require.main === module){
-    buildServer().listen({port:process.env.PORT||3000},(err)=>{
+    const app = buildServer();
+    
+    app.listen({port:process.env.PORT||3000},(err)=>{
         if(err){console.log(err);process.exit(1);}
         console.log(`http://127.0.0.1:${process.env.PORT||3000}/health`);
     });
+
+    const shutdown = async(sig)=>{
+        console.log(`[shutdown]收到${sig},正在优雅退出`);
+        await app.close();
+        console.log(`[shutdown]已关闭`);
+        process.exit(0);
+    }
+
+
+    process.on('SIGTERM',()=>{
+       shutdown('SIGTERM')
+        
+    });
+    
+    process.on('SIGINT',()=>{
+       shutdown('SIGINT')
+    
+    });
+
  }
 
 
