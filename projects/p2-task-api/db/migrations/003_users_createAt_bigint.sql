@@ -1,0 +1,4 @@
+
+
+
+ALTER TABLE users ALTER COLUMN createat TYPE BIGINT ;

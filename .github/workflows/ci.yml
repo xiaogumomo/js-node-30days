@@ -4,6 +4,20 @@ on: [push,pull_request]
 
 jobs:
    test:
+      # ⚠️ 2026-10-10（Day 24 换 Postgres 引擎后加的）：判据现在连的是**真库** ——
+      #   每个测试文件一个独立测试库（见 projects/p2-task-api/tools/testkit.js），
+      #   默认连 127.0.0.1:5432；下面这个 service 正好把它暴露在 runner 的 localhost 上。
+      services:
+        postgres:
+          image: postgres:16-alpine
+          env:
+            POSTGRES_USER: app
+            POSTGRES_PASSWORD: secret
+            POSTGRES_DB: tasks
+          ports:
+            - 5432:5432
+          options: >-
+            --health-cmd "pg_isready -U app" --health-interval 5s --health-timeout 5s --health-retries 10
       runs-on: ubuntu-latest   
       steps: 
         - uses: actions/checkout@v4

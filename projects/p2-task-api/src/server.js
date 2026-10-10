@@ -100,8 +100,9 @@ function auth(req,reply){
 
    
 
- function buildServer(){
-    const { db,ins, one, all, upd, toObj, insertUser, userByEmail, del } = openDb();
+ async function buildServer(){
+    const db = await openDb();
+    const {createTask,findTask, listTasks,updateTask,deleteTask, createUser,findUserByEmail } = db;
      const app = fastify();
 
 
@@ -138,7 +139,7 @@ function auth(req,reply){
     app.get("/tasks",async(req,reply)=>{
          const me = auth(req,reply);
         if(!me) return ;
-       return  all.all(me.sub).map(toObj);
+        return await listTasks(me.sub);
     });
 
     app.post('/tasks',async(req,reply)=>{
@@ -148,8 +149,8 @@ function auth(req,reply){
         if(!req.body||typeof req.body.title !== 'string'||req.body.title.trim()===''){
          return reply.code(400).send({error:'title 必填'});
          }
-        const info  = ins.run(req.body.title,req.body.done?1:0,me.sub);// .body自动解析JOSN
-        return reply.code(201).send(toObj(one.get(Number(info.lastInsertRowid),me.sub)));//lastInsertRowid 获取刚刚插入哪一行记录的自增主键id的属性 
+        const task  = await createTask(req.body.title,req.body.done?1:0,me.sub);// .body自动解析JOSN
+        return reply.code(201).send(task);//lastInsertRowid 获取刚刚插入哪一行记录的自增主键id的属性 
     });
     //块2 找表 修改表
 
@@ -157,44 +158,43 @@ function auth(req,reply){
           const me = auth(req,reply);
         if(!me) return ;
         
-        const row = one.get(Number(req.params.id),me.sub);
+        const row = await findTask(Number(req.params.id),me.sub);
         if(!row)return reply.code(404).send({error:'没有这一条'});
-        return toObj(row);
+        return row;
     });
     app.patch('/tasks/:id',async(req,reply)=>{
          const me = auth(req,reply);
         if(!me) return ;
         const id = Number(req.params.id)//req.params取出动态参数对象
-        const cur = one.get(id,me.sub);
+        const cur = await findTask(id,me.sub);
         if(!cur) return reply.code(404).send({error:'没有这条'});
         const title =req.body.title !== undefined? req.body.title : cur.title;
-        const done = req.body.done !== undefined ? (req.body.done? 1 : 0) : cur.done;
-        upd.run(title,done,id,me.sub); 
-        return toObj(one.get(id,me.sub));
+        const done = req.body.done !== undefined ? (req.body.done? 1 : 0) : (cur.done? 1 : 0 );
+        return await updateTask(title,done,id,me.sub);
     });
 // 块3 delete路由建立
 
     app.delete('/tasks/:id',async(req,reply)=>{
          const me = auth(req,reply);
         if(!me) return ;
-        const info = del.run(Number(req.params.id),me.sub);
-        if(info.changes === 0)return reply.code(404).send({error:'没有这条'});//受影响的行数changes lastInsertRowid最后插入行的id
+        const n = await deleteTask(Number(req.params.id),me.sub);
+        if(n === 0)return reply.code(404).send({error:'没有这条'});//受影响的行数changes lastInsertRowid最后插入行的id
         return reply.code(204).send();
     })
 
 //拼装A
 
 //注册
-app.post('/auth/register',(req,reply)=>{
+app.post('/auth/register', async(req,reply)=>{
    if(!req.body.email.includes('@')|| req.body.password.length<6 ){
     return reply.code(400).send({error:'email必须有@，password必须6位以上'});
    }
    try{
-   const info =insertUser.run(req.body.email,hashPassword(req.body.password),Date.now());
+   const info = await createUser(req.body.email,hashPassword(req.body.password),Date.now());
    return reply.code(201).send({id:Number(info.lastInsertRowid),email:req.body.email});
 
    }catch(err){
-    if(err.message.includes('UNIQUE')){
+    if(err.code === '23505'){
         return reply.code(409).send({error:'和服务器当前状态冲突'});
     }
 
@@ -206,9 +206,9 @@ app.post('/auth/register',(req,reply)=>{
 
 
 //登陆
-app.post('/auth/login',(req,reply)=>{
-    const info = userByEmail.get(req.body.email);
-    if(info === undefined){
+app.post('/auth/login',async(req,reply)=>{
+    const info =await  findUserByEmail(req.body.email);
+    if(info === null){
         return reply.code(401).send({error:'没有email'});
     }
     if(!verifyPassword(req.body.password,info.passwordHash)){
@@ -231,10 +231,8 @@ app.post('/auth/login',(req,reply)=>{
 
 
 
-
-
- if(require.main === module){
-    const app = buildServer();
+ async function main(){
+    const app = await buildServer();
     
     app.listen({port:process.env.PORT||3000},(err)=>{
         if(err){console.log(err);process.exit(1);}
@@ -243,6 +241,7 @@ app.post('/auth/login',(req,reply)=>{
 
     const shutdown = async(sig)=>{
         console.log(`[shutdown]收到${sig},正在优雅退出`);
+        app.server.closeAllConnections();
         await app.close();
         console.log(`[shutdown]已关闭`);
         process.exit(0);
@@ -260,6 +259,10 @@ app.post('/auth/login',(req,reply)=>{
     });
 
  }
+
+
+
+ if(require.main === module)main();
 
 
 

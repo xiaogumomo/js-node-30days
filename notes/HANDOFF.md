@@ -216,7 +216,18 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 
 ## 六、下一步（**10/2 = 上午第 2 周复盘 + 下午 Day 17**；10/1 那天没做，已按规则延期一天）
 
-### ⏭️ 最新一步（2026-10-09 收工 → **10/10 开工**）
+### ⏭️ 最新一步（2026-10-10 收工 → **10/11 开工**）
+
+| 项 | 状态 |
+|---|---|
+| **10/10（Day 24）成绩** | ⭐ **换引擎 sqlite → Postgres 完成**：① 迁移改 pg 语法（`AUTOINCREMENT` → `GENERATED ALWAYS AS IDENTITY`）＋ **新增 `003_users_createAt_bigint.sql`**（`Date.now()` 超 32 位 → `BIGINT`；**已跑的迁移不改，只追加** ✓）② `src/db.js` 换 `pg`（`Pool` / 异步 / `$1` / `RETURNING` / `rowCount`）③ `buildServer()` **async** ＋ 路由体换函数调用（`toObj` 全删）④ **测试隔离换成"每文件一个独立测试库"**（`tools/testkit.js` —— **放了 `tools/` 不放 `test/`**，免得被当测试文件；每文件 `tasks_test_*`，`before` 里 `DROP ... CASCADE` 重建 → **并行安全**，不需要 `--test-concurrency=1`）⑤ `ci.yml` 补 **postgres service**（不补 CI 必红）⑥ **连跑 3 遍 39/39 ＋ 仓库 85/85 ＋ 真库不再被污染**（`criteria-` 计数 10 → 10 ✓）|
+| **今天顺手修掉的 3 个真 bug（都是"sqlite 遗留"）** | ① **DELETE 用 `info.changes`** → 恒 `undefined` → **删别人的也回 204**（安全级；正是 M12 突变的形状）→ 改 `n === 0` ② **PATCH 把布尔喂回 SQL**（`cur.done` 经映射是 `true/false`，pg 的 INTEGER 拒收）→ 两个分支都归一成 0/1 ③ **POST 残留 `lastInsertRowid`** → 传了 `NaN` → 一条错拖着十条红 |
+| **⭐ 今天最值钱的发现：换引擎的三层差异** | ① **方言层**：`AUTOINCREMENT`/`PRAGMA` → `IDENTITY`/`information_schema`（或 `ADD COLUMN IF NOT EXISTS`）② **连接/驱动层**（变化最大）：同步 → **异步**、`?` → **`$1`**、`.all/.get/.run` → **统一的 `pool.query()` + `result.rows/rowCount`**、新 id 用 **`RETURNING`**（没有 `lastInsertRowid` 了）③ **严格度层**：**错误一律看 `err.code`（SQLSTATE：`23505` 唯一冲突 / `22003` 超范围 / `22P02` 格式错），别再匹配 message 字符串**；标识符**不加引号会被折成小写**（`passwordHash` → `passwordhash`）；`INTEGER` 只 32 位 |
+| **AI 今天的账** | ① 我说"迁移只需改 `AUTOINCREMENT` 一处"**说过头了** —— 还有 `INTEGER` 的宽度（32 vs 64 位）② `tasks-crud` 的 test 06 里 `DB_FILE` **有两处**，我 **grep 到了却只读到 314 行就下手**，漏了 316 行 → 又一次"读全再改" ③ `ci.yml` 第一次插入把 `services:` 插进了 `steps:` 里 → **`js-yaml` 当场抓到**（工具各咬一层的又一例）|
+| **10/11（Day 25）主线** | **清账 + 部署起步**（8 笔小账里第 1 笔最关键：**突变工具的锚点跟着 pg 改** → 13/13）→ 任务书 `notes/day25-deploy.md` |
+| 结束日 | **10/19（周一）** ✓（今天净超时 ≈ 1.5 小时，全在"首次上手 + 环境"；明天清账日吸收，第 4 周复盘核）|
+
+### ⏭️ 上一版（2026-10-09 收工 → **10/10 开工**）
 
 | 项 | 状态 |
 |---|---|
@@ -516,7 +527,7 @@ javascript.info 的书单按"**知识点**"排，**反复漏掉"工具性章节"
 
 **Docker / Postgres / Windows 客户端（2026-10-09 实测）**
 - **Postgres 现在真跑着**：`docker compose up -d db` → 容器 `js-node-30days-db-1`（`postgres:16-alpine`，**故意不映射主机端口**）。验证两条：`docker compose ps`（Up）＋ `docker compose exec db psql -U app -d tasks -c "select version();"`（→ `PostgreSQL 16.15`）。连接串：本机 = `postgres://app:secret@localhost:5432/tasks`，**容器内**才用服务名 `db`。
-- ⚠️ **`docker compose` 必须在 compose 文件所在目录跑**，否则报 `no configuration file provided: not found`（`docker` 找的是当前目录，不是仓库根）。
+- **`docker compose` 会从当前目录往上找 compose 文件**（10/10 实测：在 `projects/p2-task-api/` 里跑，也能找到仓库根那份 ✓）。⚠️ 但**往上找不到**时才报 `no configuration file provided: not found`（10/8 在家目录里踩过）；**有多个 compose 文件时也会歧义**。
 - ⚠️ **镜像源拉大 blob 会断**：`docker.1ms.run` 上小层全过、111MB 那层报 `unexpected EOF` → **原地重试 1–2 次通常就过**（10/9 实测第 2 次成功）。
 - 容器名规律：`<目录名>-<服务名>-<序号>`（例 `js-node-30days-app-1`）。**用 `docker compose stop app` 比记容器名好**；`docker compose ps -a` 的 STATUS 里 **`Exited (0)` = 干净退出、`137` = 被 SIGKILL 强杀**。
 - ⚠️ **端口 3000 上会有三个监听**（`node.exe`=127.0.0.1 你自己的服务；`com.docker.backend.exe`=0.0.0.0；`wslrelay.exe`=[::1] 后两个是 docker 的）→ **别杀后两个**（杀了 docker 端口映射就废，要重启 Docker Desktop）。

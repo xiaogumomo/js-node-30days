@@ -3,13 +3,13 @@ const fs = require('node:fs');
 const os =require('node:os');
 const path = require('node:path');
 const assert = require("node:assert/strict");
-const {DatabaseSync} = require("node:sqlite");
+// （sqlite 版已换成 Postgres 测试库；建库+清表见 tools/testkit.js）
 const {test,before,after} = require('node:test');//before after测试开始/结束后各执行一次
 //os.tmpdir()造一个临时目录/tmp  mktempSync造一个独立的目录 比如/tmp/edge-a1b2c3
 
 // ① 数据库隔离 —— 必须在 require server 之前
-const lab =fs.mkdtempSync(path.join(os.tmpdir(),'edge-'));
-process.env.DB_FILE =path.join(lab ,'tasks.db');
+const { testDbUrl, resetTestDb } = require('../tools/testkit.js');
+process.env.DB_URL = testDbUrl('edge');
 //
 
 
@@ -66,7 +66,8 @@ let app ;
 let base ;
 
 before(async()=>{
-    app = buildServer();
+    await resetTestDb('edge');
+    app =  await buildServer();
     await  app.listen({port:0,host:`127.0.0.1`});
     base = `http://127.0.0.1:${app.server.address().port}`;
 
@@ -161,14 +162,12 @@ test("08 畸形 JSON → 400（这条也会先红）",async()=>{
 });
 
 test("09 空 title → 400 且列表不多一条 ",async()=>{
-    const db = new DatabaseSync(process.env.DB_FILE);
-    const 列 = db.prepare(`SELECT COUNT(*) AS n FROM tasks`).get().n;
     const token = await  tokenOf(`iso-${Date.now()}@test.local`) ;
+    const 前 = await (await api(`/tasks`,{token})).json();
     const POST = await  api(`/tasks`,{method:'POST',token:token,body:{title:" " , done:false}});
-    const 列2 = db.prepare(`SELECT COUNT(*) AS n FROM tasks`).get().n;
+    const 后 = await (await api(`/tasks`,{token})).json();
     assert.deepEqual(POST.status,400,'标题为空应为400');
-    assert.deepEqual(列2,列,'空title列表应该不变');
-
+    assert.deepEqual(后.length,前.length,'空title列表应该不变');
 });
 
 test("10  PATCH done 再 GET 确认+ 空 body 不改字段  ",async()=>{

@@ -29,10 +29,9 @@ const { spawnSync } = require('node:child_process');
 const ROOT = path.join(__dirname, '..');
 const ENTRY = path.join(ROOT, 'src', 'server.js');
 
-// ── 0. 临时 DB（判据自己造，跑完删）────────────────────────────────
-const labDir = fs.mkdtempSync(path.join(os.tmpdir(), 'p2-auth-'));
-const DB_FILE = path.join(labDir, 'tasks.db');
-process.env.DB_FILE = DB_FILE;
+// ── 0. 测试库（每个判据文件一个独立库，互不干扰；建库 + 清表见 tools/testkit.js）────
+const { testDbUrl, resetTestDb } = require('../tools/testkit.js');
+process.env.DB_URL = testDbUrl('auth');
 
 // ── 1. 加载探针（照 server.test.js）───────────────────────────────
 const exists = fs.existsSync(ENTRY);
@@ -148,6 +147,7 @@ async function req(method, p, body, token, ms = 5000) {
 const uniqueEmail = (tag) => `${tag}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@test.local`;
 
 before(async () => {
+  await resetTestDb('auth');
   if (!ok) return;
   try {
     await startServer();
@@ -185,19 +185,20 @@ test('01 注册 → 201，而且**密码没有明文落库 / 没有回给客户�
   assert.ok(!res.text.includes(password), `注册的响应里出现了明文密码！body: ${res.text.slice(0, 200)}`);
 
   // ② 库里也不能有明文 —— 判据自己去读库（schema 无关：只要求没这个子串）
-  const { DatabaseSync } = require('node:sqlite');
-  const db = new DatabaseSync(DB_FILE, { readOnly: true });
+  const { Client } = require('pg');
+  const c = new Client({ connectionString: process.env.DB_URL });
+  await c.connect();
   try {
-    const users = db.prepare('SELECT * FROM users').all();
-    assert.ok(users.length >= 1, '`users` 表里应该有刚注册的那行');
-    const dump = JSON.stringify(users);
+    const r = await c.query('SELECT * FROM users');
+    assert.ok(r.rows.length >= 1, '`users` 表里应该有刚注册的那行');
+    const dump = JSON.stringify(r.rows);
     assert.ok(
       !dump.includes(password),
       '**密码明文出现在 `users` 表里了** —— 必须存哈希（`node:crypto` 的 `scrypt` / bcrypt / argon2 都行）\n   ' +
         `实际那一行：${dump.slice(0, 300)}`
     );
   } finally {
-    db.close();
+    await c.end();
   }
 });
 
@@ -297,14 +298,15 @@ test('P 探针：token 结构 / 库里那条哈希长什么样 / 迁移文件（
   }
 
   try {
-    const { DatabaseSync } = require('node:sqlite');
-    const db = new DatabaseSync(DB_FILE, { readOnly: true });
-    const row = db.prepare('SELECT * FROM users LIMIT 1').get();
-    const dump = JSON.stringify(row);
+    const { Client } = require('pg');
+    const c = new Client({ connectionString: process.env.DB_URL });
+    await c.connect();
+    const r = await c.query('SELECT * FROM users LIMIT 1');
+    const dump = JSON.stringify(r.rows[0]);
     console.log(`  · users 表里那一行长这样：${dump.slice(0, 160)}`);
     const looksHashed = /\$2[aby]\$|\$argon2|scrypt|[0-9a-f]{32,}/.test(dump);
     console.log(`  · 看起来像哈希吗：${looksHashed ? '像 ✓' : '⚠️ 不太像（也可能只是格式特殊，自己确认一下）'}`);
-    db.close();
+    await c.end();
   } catch (e) {
     console.log(`  · 读库失败：${e.message}`);
   }

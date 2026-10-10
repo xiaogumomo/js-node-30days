@@ -25,6 +25,10 @@ const ROOT = path.join(__dirname, '..');            // projects/p2-task-api
 const ENTRY = path.join(ROOT, 'src', 'server.js');
 
 // ── 0. 先探：文件在不在 / require 必不爆炸 / 导出对不对 ─────────────
+// ── 0. 测试库（每个判据文件一个独立库；建库 + 清表见 tools/testkit.js）────
+const { testDbUrl, resetTestDb } = require('../tools/testkit.js');
+process.env.DB_URL = testDbUrl('server');
+
 const exists = fs.existsSync(ENTRY);
 if (!exists) {
   console.log(
@@ -129,6 +133,7 @@ async function closeServer(handle) {
 }
 
 before(async () => {
+  await resetTestDb('server');
   if (!ok) return;
   try {
     await startServer();

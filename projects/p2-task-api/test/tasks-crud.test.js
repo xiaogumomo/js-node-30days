@@ -27,10 +27,9 @@ const { spawn, spawnSync } = require('node:child_process');
 const ROOT = path.join(__dirname, '..');            // projects/p2-task-api
 const ENTRY = path.join(ROOT, 'src', 'server.js');
 
-// ── 0. 临时 DB 文件（判据自己造，跑完删）────────────────────────────
-const labDir = fs.mkdtempSync(path.join(os.tmpdir(), 'p2-db-'));
-const DB_FILE = path.join(labDir, 'tasks.db');
-process.env.DB_FILE = DB_FILE;   // ⚠️ 必须在 require 之前设：万一他的模块"顶层读"也能拦住（但契约要求运行时读）
+// ── 0. 测试库（每个判据文件一个独立库，互不干扰；建库 + 清表见 tools/testkit.js）──
+const { testDbUrl, resetTestDb } = require('../tools/testkit.js');
+process.env.DB_URL = testDbUrl('crud'); // openDb() 在【调用时】读它 → 在 buildServer() 之前设好即可
 
 // ── 1. 先探：文件在不在 / require 必不爆炸 / 导出对不对（照 server.test.js）──
 const exists = fs.existsSync(ENTRY);
@@ -179,6 +178,7 @@ async function req(method, p, body, ms = 5000) {
 }
 
 before(async () => {
+  await resetTestDb('crud');
   if (!ok) return;
   try {
     await startServer();
@@ -266,14 +266,14 @@ test('05 DELETE /tasks/:id → 200/204；再 GET → 404', { skip, timeout: 1500
   assert.strictEqual(after.status, 404, `删掉之后再查应该 404，实际 ${after.status}`);
 });
 
-test('06 跨进程持久化：换个进程起同一个 DB_FILE，数据还在（防"内存数组假数据库"）', { skip, timeout: 40000 }, async () => {
+test('06 跨进程持久化：换个进程起同一个 DB_URL，数据还在（防"内存数组假数据库"）', { skip, timeout: 40000 }, async () => {
   const port1 = 31000 + Math.floor(Math.random() * 10000);
   const port2 = port1 + 1;
   const marker = `持久化标记-${Date.now()}`;
 
   const child1 = spawn(process.execPath, ['src/server.js'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(port1), DB_FILE },
+    env: { ...process.env, PORT: String(port1) }, // DB_URL 由 ...process.env 带过去
   });
   const child2 = { proc: null };
   const log = { out: '' };
@@ -310,10 +310,10 @@ test('06 跨进程持久化：换个进程起同一个 DB_FILE，数据还在（
     child1.kill();
     await new Promise((r) => child1.once('exit', r));
 
-    // 换一个进程、同一个 DB_FILE 再起来
+    // 换一个进程、同一个 DB_URL 再起来
     const c2 = spawn(process.execPath, ['src/server.js'], {
       cwd: ROOT,
-      env: { ...process.env, PORT: String(port2), DB_FILE },
+      env: { ...process.env, PORT: String(port2) }, // DB_URL 由 ...process.env 带过去
     });
     child2.proc = c2;
     c2.stdout.on('data', (d) => (log.out += d));
