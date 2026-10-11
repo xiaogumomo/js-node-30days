@@ -21,6 +21,8 @@ services:
        #image告诉启动容器时，用哪个镜像  postgres：16-alpineDocker 
        #官方 PostgreSQL 镜像，主版本 16，基于 Alpine Linux。
         image: postgres:16-alpine
+        ports:
+          - '127.0.0.1:5432:5432'
        # PostgreSQL 官方镜像认识的变量
        # POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB（初始化创建数据库tasks）
         environment:
