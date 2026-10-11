@@ -130,6 +130,8 @@ const MUTATIONS = [
     steps: [
       { re: /AND\s+userId\s*=\s*\(\s*\?\s*\)/g, to: 'AND (? IS NOT NULL)' },
       { re: /AND\s+userId\s*=\s*\?/g, to: 'AND (? IS NOT NULL)' },
+      // ⚠️ 2026-10-11：换 pg 之后的写法（占位符是 $n —— 替换时【必须原样保留序号】，否则 SQL 参数对不上）
+      { re: /AND\s+userId\s*=\s*\$(\d+)/g, to: 'AND $$$1 IS NOT NULL' },
     ],
   },
   {
@@ -140,6 +142,8 @@ const MUTATIONS = [
     steps: [
       { re: /WHERE\s+userId\s*=\s*\(\s*\?\s*\)/g, to: 'WHERE (? IS NOT NULL)' },
       { re: /WHERE\s+userId\s*=\s*\?/g, to: 'WHERE (? IS NOT NULL)' },
+      // ⚠️ 2026-10-11：pg 写法（列表的隔离条件 = WHERE userId = $1）
+      { re: /WHERE\s+userId\s*=\s*\$(\d+)/g, to: 'WHERE $$$1 IS NOT NULL' },
     ],
   },
   {
@@ -149,6 +153,8 @@ const MUTATIONS = [
     steps: [
       { re: /SET\s+title\s*=\s*\?\s*,\s*done\s*=\s*\?/i, to: 'SET title = ?, done = done' },
       { re: /SET\s+done\s*=\s*\?\s*,\s*title\s*=\s*\?/i, to: 'SET done = done, title = ?' },
+      // ⚠️ 2026-10-11：pg 写法（UPDATE tasks SET title = $1, done = $2 …）→ 把 done 那一半摘掉
+      { re: /SET\s+title\s*=\s*\$(\d+)\s*,\s*done\s*=\s*\$\d+/i, to: 'SET title = $1, done = done' },
     ],
   },
   {
@@ -196,6 +202,8 @@ const MUTATIONS = [
     steps: [
       { re: /\.changes\s*===?\s*0/, to: '.changes < 0' },
       { re: /\.changes\s*<\s*1/, to: '.changes < 0' },
+      // ⚠️ 2026-10-11：pg 写法 —— DELETE 现在看 rowCount：`if (n === 0) return 404` → 让这个判断恒假
+      { re: /\bn\s*===?\s*0\b/, to: 'false' },
     ],
   },
   {
@@ -276,6 +284,12 @@ function makeVariant(id, src, targetRel = path.basename(IMPL_ABS)) {
   //    因为数据层抽成了 src/db.js —— 只搬 server.js 会让 require('./db') 当场失败，
   //    于是 13 条**全部**报"无法判定"（工具对"项目只有一个源文件"的假设露出来了）。
   fs.cpSync(path.join(ROOT, 'src'), path.join(dir, 'src'), { recursive: true });
+  // ⚠️ 2026-10-11：`tools/` 也要搬 —— 判据现在 require('../tools/testkit.js')（测试库帮手），
+  //    实验室里没有它 → 判据加载就失败 → 13 条又"全部无法判定"。
+  //    （同一个坑第二次：**布局变了，实验室必须跟上** —— 这就是"工具藏着对项目结构的假设"）
+  if (fs.existsSync(path.join(ROOT, 'tools'))) {
+    fs.cpSync(path.join(ROOT, 'tools'), path.join(dir, 'tools'), { recursive: true });
+  }
   fs.writeFileSync(path.join(dir, 'src', targetRel), src); // 再盖成突变版（默认 server.js；突变住在第二靶子时就是它）
   fs.cpSync(MIG_SRC, path.join(dir, 'db', 'migrations'), { recursive: true });
   fs.copyFileSync(PKG_SRC, path.join(dir, 'package.json'));
@@ -300,7 +314,7 @@ function runTests(dir) {
       cwd: dir,
       encoding: 'utf8',
       timeout: RUN_TIMEOUT,
-      env: { ...process.env, DB_FILE: path.join(dir, 'data', 'lab.db') },
+      env: { ...process.env },   // ⚠️ 2026-10-11：pg 时代不再有 DB_FILE；实验室里的判据自己会把 DB_URL 指到测试库 ✓
     }
   );
   const out = `${r.stdout || ''}\n${r.stderr || ''}`;

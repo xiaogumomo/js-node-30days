@@ -7,8 +7,8 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 #复制 package.json 和 pnpm-lock.yaml 文件到当前目录（app）下
 COPY package.json pnpm-lock.yaml ./
-#让pnpm可用+安装计划需要的依赖
-RUN corepack enable && pnpm install --frozen-lockfile
+#让pnpm可用+安装计划需要的依赖   COREPACK_NPM_REGISTRY → corepack 下载 pnpm 本身的源（就是它刚才失败的 ✗）② pnpm config set registry → 后面 pnpm install 拉依赖的源 ✓
+RUN corepack enable && COREPACK_NPM_REGISTRY=https://registry.npmmirror.com pnpm config set registry https://registry.npmmirror.com && pnpm install --frozen-lockfile
 
 
 #--------- 运行阶段：只带运行需要的东西 ----------

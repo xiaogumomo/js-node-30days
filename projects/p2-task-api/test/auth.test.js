@@ -170,7 +170,7 @@ test('00 模块能被加载，并导出 buildServer 函数', () => {
   assert.ok(
     ok,
     (loadError ? `加载 src/server.js 时报错：${loadError.message}` : moduleTrouble()) +
-      '\n   契约：`module.exports = { buildServer }`；`buildServer()` 不许自己 listen；**库路径在它被调用时读 `process.env.DB_FILE`**。'
+      '\n   契约：`module.exports = { buildServer }`；`buildServer()` 不许自己 listen；**库路径在它被调用时读 `process.env.DB_URL`**。'
   );
 });
 
@@ -180,6 +180,13 @@ test('01 注册 → 201，而且**密码没有明文落库 / 没有回给客户�
   const password = 'P@ssw0rd-明文标记-9F3';
   const res = await req('POST', '/auth/register', { email, password });
   assert.strictEqual(res.status, 201, `注册应该 201，实际 ${res.status}（body: ${res.text.slice(0, 200)}）`);
+
+  // ⚠️ 2026-10-11 补牙：注册返回的 `id` 必须是【真数字】
+  //    换 pg 之后 sqlite 的 `lastInsertRowid` 没了 → 曾经回的是 `id: NaN`，而**一条判据都没发现**。
+  {
+    const body = JSON.parse(res.text);
+    assert.ok(Number.isInteger(body.id), `注册返回的 id 必须是真数字，实际 ${JSON.stringify(body)}`);
+  }
 
   // ① 返回体里不能有明文
   assert.ok(!res.text.includes(password), `注册的响应里出现了明文密码！body: ${res.text.slice(0, 200)}`);

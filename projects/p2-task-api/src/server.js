@@ -2,7 +2,6 @@
 
 
 const fastify = require("fastify");
-const {DatabaseSync} =require('node:sqlite');
 const crypto =require('node:crypto');
 const  path =require("node:path");
 const fs = require('node:fs');
@@ -150,14 +149,14 @@ function auth(req,reply){
          return reply.code(400).send({error:'title 必填'});
          }
         const task  = await createTask(req.body.title,req.body.done?1:0,me.sub);// .body自动解析JOSN
-        return reply.code(201).send(task);//lastInsertRowid 获取刚刚插入哪一行记录的自增主键id的属性 
+        return reply.code(201).send(task);//RETURNING
     });
     //块2 找表 修改表
 
     app.get('/tasks/:id',async(req,reply)=>{
           const me = auth(req,reply);
         if(!me) return ;
-        
+        if(!Number.isInteger(Number(req.params.id))) return reply.code(404).send({error:'没有这一条'});
         const row = await findTask(Number(req.params.id),me.sub);
         if(!row)return reply.code(404).send({error:'没有这一条'});
         return row;
@@ -166,6 +165,7 @@ function auth(req,reply){
          const me = auth(req,reply);
         if(!me) return ;
         const id = Number(req.params.id)//req.params取出动态参数对象
+        if(!Number.isInteger(Number(req.params.id)))return reply.code(404).send({error:'没有这一条'});
         const cur = await findTask(id,me.sub);
         if(!cur) return reply.code(404).send({error:'没有这条'});
         const title =req.body.title !== undefined? req.body.title : cur.title;
@@ -177,9 +177,10 @@ function auth(req,reply){
     app.delete('/tasks/:id',async(req,reply)=>{
          const me = auth(req,reply);
         if(!me) return ;
+        if (!Number.isInteger(Number(req.params.id))) return reply.code(404).send({ error: '没有这条' });
         const n = await deleteTask(Number(req.params.id),me.sub);
-        if(n === 0)return reply.code(404).send({error:'没有这条'});//受影响的行数changes lastInsertRowid最后插入行的id
-        return reply.code(204).send();
+        if(n === 0)return reply.code(404).send({error:'没有这条'});//deletTask 返回rowCount
+        return reply.code(204).send();//rowCount
     })
 
 //拼装A
@@ -191,7 +192,7 @@ app.post('/auth/register', async(req,reply)=>{
    }
    try{
    const info = await createUser(req.body.email,hashPassword(req.body.password),Date.now());
-   return reply.code(201).send({id:Number(info.lastInsertRowid),email:req.body.email});
+   return reply.code(201).send({id:Number(info.id),email:info.email});
 
    }catch(err){
     if(err.code === '23505'){
@@ -234,7 +235,7 @@ app.post('/auth/login',async(req,reply)=>{
  async function main(){
     const app = await buildServer();
     
-    app.listen({port:process.env.PORT||3000},(err)=>{
+    app.listen({port:process.env.PORT||3000,host:'0.0.0.0'},(err)=>{
         if(err){console.log(err);process.exit(1);}
         console.log(`http://127.0.0.1:${process.env.PORT||3000}/health`);
     });

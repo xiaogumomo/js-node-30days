@@ -161,6 +161,22 @@ test("08 畸形 JSON → 400（这条也会先红）",async()=>{
 
 });
 
+// ⚠️ 2026-10-11 补的两条牙：
+//   ① 非数字 id → 404（换 pg 后 `Number('abc')` = NaN 会喂给 SQL → 曾经回 500）
+//   ② 列表按 id 升序（10/9 丢过 `ORDER BY id`，当时没有任何判据发现）
+test("非数字 id → 404（不是 500）＋ 列表按 id 升序",async()=>{
+    const token = await  tokenOf(`iso-${Date.now()}@test.local`) ;
+
+    const bad = await api(`/tasks/abc`,{token});
+    assert.deepEqual(bad.status,404,'非数字 id 应该 404（不是 500）');
+
+    await api(`/tasks`,{method:'POST',token:token,body:{title:"sort-a",done:false}});
+    await api(`/tasks`,{method:'POST',token:token,body:{title:"sort-b",done:false}});
+    const list = await (await api(`/tasks`,{token})).json();
+    const ids = list.map((t)=>t.id);
+    assert.deepEqual(ids,[...ids].sort((a,b)=>a-b),`列表应按 id 升序，实际 ${JSON.stringify(ids)}`);
+});
+
 test("09 空 title → 400 且列表不多一条 ",async()=>{
     const token = await  tokenOf(`iso-${Date.now()}@test.local`) ;
     const 前 = await (await api(`/tasks`,{token})).json();

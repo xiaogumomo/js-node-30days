@@ -34,6 +34,16 @@ pnpm add pg                                                           # 判据�
 **最小示范（先不碰 `server.js`）**：新建 `scratch/01-pg-connect.js` —— 用 `pg` 连上、跑一次 `SELECT 1`、把结果打出来。
 → **跑通就算这一步过**（它同时证明三件事：驱动装了 ✓ 网络通了 ✓ 用户名密码对 ✓）。
 
+> **⚠️⚠️ 开场实测 ②（10:35，AI 核过）：`db` 没映射主机端口 → 宿主机连不到它（必须先补一行）**
+> `docker compose ps` 的 PORTS 列：`app` 是 `0.0.0.0:3000->3000/tcp`，而 **`db` 只有 `5432/tcp`** —— 说明 db 服务**没有** `ports:` 映射（原设计如此：只有容器网络里的 `app` 用服务名 `db` 访问它）。
+> 今天要在**宿主机**上跑 node / 跑测试去连库 → **必须给 db 开个口子**。改 `docker-compose.yml` 的 `db` 服务，加：
+> ```yaml
+>         ports:
+>           - "127.0.0.1:5432:5432"     # 只暴露给本机（不上局域网）；宿主机上的 node 和测试才连得到
+> ```
+> 然后 `docker compose up -d db`（会重建 db 容器；**卷 `pgdata` 保留，数据不丢**）→ `docker compose ps` 判据：PORTS 列出现 `127.0.0.1:5432->5432/tcp`。
+> 💡 写 `127.0.0.1:5432:5432` 而不是 `5432:5432`：只绑本机回环（不上局域网），而且**宿主侧只有 IPv4 一条路**——连接串用 `127.0.0.1` 就不会再撞那个 `AggregateError`（IPv4+IPv6 双试都失败）。
+
 **骨架（形状我给，跑通和后面的改造是你的事）**：
 
 ```js
@@ -58,7 +68,7 @@ const pool = new Pool({ connectionString: process.env.DB_URL || 'postgres://app:
 
 **记账**：骨架 = AI 给的；跑通 + 之后的改造 = 你。
 
-⚠️ **连接串**：本机连 = `postgres://app:secret@localhost:5432/tasks`（**容器之间**互联才用服务名 `db`——compose 里 `app` 用的是 `db`，本机跑用 `localhost`，这里最容易搞混）。
+⚠️ **连接串**：本机连 = `postgres://app:secret@127.0.0.1:5432/tasks`（**前提**：db 已按上面那条映射了 `127.0.0.1:5432:5432` —— 映射之前宿主机根本连不到）。**容器之间**互联才用服务名 `db`（compose 里 `app` 连的就是 `db`）。用 `127.0.0.1` 而不是 `localhost`：少一趟 IPv6 尝试、报错更干净。
 
 ---
 
@@ -142,7 +152,9 @@ const pool = new Pool({ connectionString: process.env.DB_URL || 'postgres://app:
 
 ## 五 开工前要确认的三件事（30 秒）
 
-1. `docker compose ps` → **db 是 Up**（不是的话：`docker compose up -d db`）
+> **⚠️ 开场实测（10/10 08:24，AI 核过）**：① **Docker 引擎没跑**（`dockerDesktopLinuxEngine` 连不上）→ **先 `docker desktop start`**，再 `docker compose up -d db`（compose 里没写 restart 策略，容器不会自己回来）② **`pg` 还没装**（正常，今天第一件事）③ 昨晚三条提交**都已 push** ✓（`6f5e969`）
+
+1. `docker compose ps` → **db 是 Up**（不是的话：`docker desktop start` ＋ `docker compose up -d db`）
 2. `pnpm add pg` 能不能装上（网络不稳就先记账、换 `npm i pg` 试）
 3. pg 里的 `tasks` 库存在吗（compose 的 `POSTGRES_DB: tasks` 会自动建 ✓，`\l` 看一眼）
 

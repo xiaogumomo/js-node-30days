@@ -3,7 +3,7 @@
 // 跑法：node --test projects/p2-task-api/test/tasks-crud.test.js
 //
 // 契约（也写在 notes/day18-database.md 里）：
-//   · **数据库文件路径读 `process.env.DB_FILE`**（默认 `data/tasks.db`），**在 buildServer() 被调用时读**
+//   · **数据库文件路径读 `process.env.DB_URL`**（默认 `data/tasks.db`），**在 buildServer() 被调用时读**
 //     ⚠️ 不许在模块顶层就 open 数据库（那是模块副作用 —— 判据要能按测试换库，同 Day 17 的"不许自己 listen"）
 //   · 端点（在 Day 17 的骨架上加；全部返回 JSON）：
 //     POST   /tasks      body {"title":"…","done"?:false}  → **201** + JSON，且带**非空 `id`**
@@ -12,7 +12,7 @@
 //     PATCH  /tasks/:id  body {"title"?,"done"?}           → 200 + 更新后的对象；不存在 → 404 + JSON
 //     DELETE /tasks/:id  → **204**（无 body）或 200 + JSON；不存在 → 404 + JSON
 //     `title` 缺失/为空  → **400 / 422** + JSON
-//   · **持久化**：一条数据创建之后，**换一个进程**起同一个 DB_FILE → 它还在（06 专门防"内存数组假装数据库"）
+//   · **持久化**：一条数据创建之后，**换一个进程**起同一个 DB_URL → 它还在（06 专门防"内存数组假装数据库"）
 //
 // 必过 8 条 + 探针 1 条 = 本文件 9 条 test()。**只看 HTTP 行为 + 跨进程还在**，不挑 ORM / 驱动
 // （`node:sqlite` / Prisma / better-sqlite3 都行）。全打本地随机端口 + 临时 DB 文件（在系统临时目录，跑完删掉），不碰仓库。
@@ -203,7 +203,7 @@ test('00 模块能被加载，并导出 buildServer 函数', () => {
     ok,
     (loadError ? `加载 src/server.js 时报错：${loadError.message}` : moduleTrouble()) +
       '\n   契约：`module.exports = { buildServer }`；`buildServer()` 只负责"造一个服务"，**不许自己 listen**，' +
-      '\n   而且**数据库文件路径要在它被调用时读 `process.env.DB_FILE`**（默认 `data/tasks.db`）——判据就是靠这个换临时库的。'
+      '\n   而且**数据库文件路径要在它被调用时读 `process.env.DB_URL`**（默认 `data/tasks.db`）——判据就是靠这个换临时库的。'
   );
 });
 
