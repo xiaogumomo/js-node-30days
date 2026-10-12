@@ -1,0 +1,18 @@
+{
+  "name": "p3-doc-qa",
+  "version": "1.0.0",
+  "description": "文档问答服务（RAG 检索增强，项目 3）",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@12.8.1",
+  "private": "true",
+  "dependencies": {
+    "pino": "^10.4.0"
+  }
+}
