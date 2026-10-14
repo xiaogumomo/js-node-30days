@@ -10,11 +10,11 @@
 //     meta:    { model, status, latencyMs, attempts }   ← 来自公共层 requestJson
 //
 //   opts（全部可选）：
-//     apiKey     默认 process.env.SILICONFLOW_API_KEY（没有 → 立刻抛错，信息里要点名 SILICONFLOW_API_KEY）
-//     baseUrl    默认 process.env.EMBED_BASE_URL ?? 'https://api.siliconflow.cn/v1'
-//     model      默认 process.env.EMBED_MODEL ?? 'BAAI/bge-m3'
+//     apiKey     默认 process.env.EMBED_API_KEY（没有 → 立刻抛错，信息里要点名 EMBED_API_KEY）
+//     baseUrl    默认 process.env.EMBED_BASE_URL ?? 'https://open.bigmodel.cn/api/paas/v4'
+//     model      默认 process.env.EMBED_MODEL ?? 'embedding-3'（智谱，实测 **2048 维**）
 //     timeoutMs / retries / backoffMs / logger   透传给 requestJson
-//     priceTable 默认内置表（bge-m3 在硅基流动是免费档 → inPerM: 0；**以官网为准**）
+//     priceTable 默认内置表（inPerM: 0 —— 现在吃新用户赠送包；**价格待照官网核**）
 //
 //   行为：
 //     **内部必须调 `src/http.js` 的 `requestJson`**（别再抄一套重试）→ 判据 08 就是守这条
@@ -28,7 +28,7 @@ const {estimateCost}=require(`./llm.js`);
 
 const DEFAULT_PRICE_TABLE ={
 
-    'BAAI/bge-m3':{
+    'embedding-3':{
       inPerM: 0,
       outPerM: 0,
    }
@@ -36,9 +36,9 @@ const DEFAULT_PRICE_TABLE ={
 }
 async  function embed(texts,opts={}){
     const {
-        apiKey = process.env.SILICONFLOW_API_KEY,
-        baseUrl = process.env.EMBED_BASE_URL ?? 'https://api.siliconflow.cn/v1',
-        model = process.env.EMBED_MODEL ?? 'BAAI/bge-m3',
+        apiKey = process.env.EMBED_API_KEY,
+        baseUrl = process.env.EMBED_BASE_URL ?? 'https://open.bigmodel.cn/api/paas/v4',
+        model = process.env.EMBED_MODEL ?? 'embedding-3',
         timeoutMs,
         retries,
         backoffMs,
@@ -49,7 +49,7 @@ async  function embed(texts,opts={}){
     
 
     if(!apiKey){
-        throw new Error(`需要SILICONFLOW_API_KEY`);
+        throw new Error(`需要 EMBED_API_KEY`);
     }
 
     if(!Array.isArray(texts)){

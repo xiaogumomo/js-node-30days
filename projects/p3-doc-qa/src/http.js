@@ -120,7 +120,7 @@ async function requestJson(url, opts={}){
         const data = JSON.parse(text);
         end =performance.now() ;
         let latencyMs = end-start ;
-        logger.info({...logFields,data,status,latencyMs, attempt:attempt+1},`成功返回了`);
+        logger.info({...logFields,status,latencyMs, attempt:attempt+1},`成功返回了`);
         return {
             data ,
             status,

@@ -3,7 +3,7 @@
 // test/embed.test.js —— 向量化 `embed` 的判据（AI 写的，实现由你写）
 //
 // 走的全是假服务器（不花一分钱、不看网络脸色）。真调用那条单独放
-// （`embed.live.test.js`，要等 SiliconFlow 的 key 能用才跑）。
+// （`embed.live.test.js`，要设 LLM_LIVE=1 + .env 里有真 key 才跑）。
 //
 // ★ 契约：
 //   const { embed } = require('../src/embed.js');
@@ -15,11 +15,11 @@
 //     meta:    { model, status, latencyMs, attempts }   ← 来自公共层 requestJson
 //
 //   opts（全部可选）：
-//     apiKey     默认 process.env.SILICONFLOW_API_KEY（没有 → 立刻抛错，信息里要点名 SILICONFLOW_API_KEY）
-//     baseUrl    默认 process.env.EMBED_BASE_URL ?? 'https://api.siliconflow.cn/v1'
-//     model      默认 process.env.EMBED_MODEL ?? 'BAAI/bge-m3'
+//     apiKey     默认 process.env.EMBED_API_KEY（没有 → 立刻抛错，信息里要点名 EMBED_API_KEY）
+//     baseUrl    默认 process.env.EMBED_BASE_URL ?? 'https://open.bigmodel.cn/api/paas/v4'
+//     model      默认 process.env.EMBED_MODEL ?? 'embedding-3'（智谱，实测 **2048 维**）
 //     timeoutMs / retries / backoffMs / logger   透传给 requestJson
-//     priceTable 默认内置表（bge-m3 在硅基流动是免费档 → inPerM: 0；**以官网为准**）
+//     priceTable 默认内置表（inPerM: 0 —— 现在吃新用户赠送包；**价格待照官网核**）
 //
 //   行为：
 //     **内部必须调 `src/http.js` 的 `requestJson`**（别再抄一套重试）→ 判据 08 就是守这条
@@ -76,7 +76,7 @@ const VEC = { 甲: [1, 0, 0], 乙: [0, 1, 0], 丙: [0, 0, 1] };
 function embBody(input, opts = {}) {
   const rows = input.map((t, i) => ({ object: 'embedding', index: i, embedding: opts.weird ? (i === 0 ? [1, 2] : [1, 2, 3]) : VEC[t] ?? [i, i, i] }));
   const keep = opts.dropLast ? rows.slice(0, -1) : rows;
-  return JSON.stringify({ object: 'list', model: 'BAAI/bge-m3', data: keep, usage: { prompt_tokens: opts.tokens ?? input.length * 3, total_tokens: opts.tokens ?? input.length * 3 } });
+  return JSON.stringify({ object: 'list', model: 'embedding-3', data: keep, usage: { prompt_tokens: opts.tokens ?? input.length * 3, total_tokens: opts.tokens ?? input.length * 3 } });
 }
 
 const KEY = 'sk-test-embed-1';
@@ -97,7 +97,7 @@ test('01 正常：请求形状对 + vectors 按序返回 + meta/usage 映射对'
     assert.strictEqual(hit.method, 'POST');
     assert.strictEqual(hit.url, '/embeddings', '路径要拼成 /embeddings（baseUrl 已含 /v1）');
     assert.strictEqual(hit.auth, `Bearer ${KEY}`);
-    assert.strictEqual(hit.body.model, 'BAAI/bge-m3');
+    assert.strictEqual(hit.body.model, 'embedding-3');
     assert.deepStrictEqual(hit.body.input, ['甲', '乙', '丙'], 'input 要原样传数组');
     assert.deepStrictEqual(r.vectors, [VEC['甲'], VEC['乙'], VEC['丙']]);
     assert.strictEqual(r.meta.attempts, 1);
@@ -190,19 +190,19 @@ test('06 元素不是字符串 → 抛 TypeError，且不发请求', async () =>
 });
 
 // 07 在防：没配 key 还去发请求（拿一个看不懂的 401）
-test('07 缺 key → 立刻抛（信息里点名 SILICONFLOW_API_KEY），零请求', async () => {
+test('07 缺 key → 立刻抛（信息里点名 EMBED_API_KEY），零请求', async () => {
   let hits = 0;
   const srv = await startFakeServer((req, res) => {
     hits++;
     res.end('{}');
   });
-  const saved = process.env.SILICONFLOW_API_KEY;
-  delete process.env.SILICONFLOW_API_KEY;
+  const saved = process.env.EMBED_API_KEY;
+  delete process.env.EMBED_API_KEY;
   try {
-    await assert.rejects(embed(['甲'], { baseUrl: srv.baseUrl, logger: fakeLogger() }), /SILICONFLOW_API_KEY/);
+    await assert.rejects(embed(['甲'], { baseUrl: srv.baseUrl, logger: fakeLogger() }), /EMBED_API_KEY/);
     assert.strictEqual(hits, 0);
   } finally {
-    if (saved !== undefined) process.env.SILICONFLOW_API_KEY = saved;
+    if (saved !== undefined) process.env.EMBED_API_KEY = saved;
     await srv.close();
   }
 });
@@ -243,7 +243,7 @@ test('09 成本：按注入的价格表精确算', async () => {
       baseUrl: srv.baseUrl,
       apiKey: KEY,
       logger: fakeLogger(),
-      priceTable: { 'BAAI/bge-m3': { inPerM: 2 } },
+      priceTable: { 'embedding-3': { inPerM: 2 } },
     });
     assert.strictEqual(r.usage.promptTokens, 1000000);
     assert.strictEqual(r.cost, 2, '100 万 token × 2 元/百万 = 2 元');
