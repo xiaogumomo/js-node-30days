@@ -8,17 +8,14 @@
 // 大小写	原样算（'.JS' 和 '.js' 算两个键）—— 这是本题的规定，不是通用真理
 // 原数组	不能改
 
-
 const path = require('node:path');
-function countByExt(arr){
-    let result = {};
-    for(let i = 0 ; i< arr.length  ; i++){
-        
-        const key= path.extname(arr[i]);
-         result[key]= (result[key]?? 0)+1 ;
-        
-     }
-
-     return result ;
+function countByExt(paths){
+    let result = {} ;
+    for(let keys of paths){
+        let key = path.extname(keys) ;
+        result[key] = (result[key]?? 0)  + 1 ;
+    }
+    return result ;
 }
-    module.exports ={countByExt};
+
+module .exports = {countByExt} ;

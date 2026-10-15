@@ -1,58 +1,64 @@
 
-class HttpError extends Error{
-    constructor(status,message){
-        super(message??`HTTP${status}`);
-        this.name= HttpError;
+class  HttpError extends Error{
+    constructor(status, message){
+        super(message??`Http${status}`);
+        this.name = 'HttpError';
         this.status = status ;
     }
 }
-//todo : sleep + new promise 写法不会写了
-const sleep=(ms)=>new Promise((r)=>setTimeout(r,ms));
 
-async function fetchWithRetry(url,options = {}){
-     const {
-        retries = 3,
-        waitMs= 100,
+sleep = (ms)=>new Promise((r)=>setTimeout(r,ms));
+
+
+async function  fetchWithRetry(url,opts={}){
+
+    const {
+        retries = 2 ,
+        backoffMs = 300,
+        waitMs = 100,
         ...fetchOptions
-    } = options ;
+    }=opts ;
+    let lastError ;
+    let fullretries = retries + 1 ; 
+    let timer ;
+    let res ;
 
-    let lastError;
-    const totalAttempts = retries + 1;
-    for(let attempt = 0 ; attempt < totalAttempts ; attempt++){
+    for(let attempt = 0 ; attempt < fullretries ; attempt++){
+        
         if(attempt>0){
-           await sleep(waitMs*2**(attempt-1));
+            sleep(backoffMs*2**(attempt-1));
         }
-     let  res ;
-     const controller = new AbortController();
-     const timer = setTimeout(()=>controller.abort(),waitMs);
+        
+        let controlled = new AbortController();
+        timer = setTimeout(()=>controlled.abort(),waitMs);
         try{
-            res =  await fetch(url,{...fetchOptions,signal:controller.signal});
-            
+            res = await fetch(url,{signal:controlled.signal});
         }catch(err){
             clearTimeout(timer);
-            lastError = err;
+            lastError = err ;
             continue;
         }
 
-            clearTimeout(timer);
-            const status =res.status;
+        clearTimeout(timer) ;
 
-            if(status>=200 && status < 300){
-                return res;
-            }
+        const status = res.status ;
+        
 
-            if(status>=500){
-                lastError = new HttpError(status);
-                continue;
-            }
+        if(status>=200 && status < 300){
+            return res ;
+        }
 
-            throw new HttpError(status);
+        if(status>=500 &&status <600){
+            lastError = new HttpError(status);
+            continue;
+        }
+
+        lastError = new HttpError(status) ;
     }
 
-    if(lastError !== undefined)throw lastError;
-    throw new Error('发生未知错误');
+    if(lastError) throw lastError ;
+    throw new Error(`发生未知错误`);
+    
 }
 
-
-
-module.exports ={fetchWithRetry};
+module .exports = {fetchWithRetry};
