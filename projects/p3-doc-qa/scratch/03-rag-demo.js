@@ -7,66 +7,7 @@ const path = require('node:path');
 const{requestJson} = require(`../src/http.js`);
 const{estimateCost} = require('../src/llm.js');
 const{chat} = require('../src/llm.js');
-async function demo(){
 
-    //读文件
-
-const notes = fs.readFileSync(path.join(__dirname,'..','..','..','notes','day26.md'),'utf-8');
-
-//切块
-
-const  chunk =  chunkText(notes);
-console.log(`============切块demo测试============`);
-console.log(`切了${chunk.length}块`);
-console.log(`第一块的前几十个字有：${chunk[0].text.slice(0,40)}`);
-for(let i = 0 ; i < chunk.length ; i ++ ){
-    console.log(`在下标为${i}的时候，它的start为${chunk[i].start},它的end为${chunk[i].end}`);
-}
-//向量化
-
-
-const embeded =await embed(chunk.map((c)=>c.text));
-
-console.log(`============向量化demo测试============`);
-
-console.log(`一共拿到${embeded.vectors.length}个向量`);
-
-console.log(`返回的embedding有${embeded.vectors[0].length}维`)
-
-
-console.log(`这次花了有${embeded.cost}块钱`);
-//入库
-
-const s = createStore();
-let chunks = [];
-for(let i = 0 ; i < chunk.length ; i ++){
-    chunks.push({...chunk[i],vector:embeded.vectors[i]})
-}
-const up = s.upsert(chunks);
-console.log(`入库${up}条`);
-console.log(`size拼起来的有${s.size()}个`);
-
-// 5. 查（用文档里的话问）
-console.log(`============查（用文档里的话问）============`);
-
-const queryVector = await embed([`我的切法（10:25 那格写，3–5 行，发 AI）有哪些`]);
-
-const hits = s.search(queryVector.vectors[0],3);
-for(let i of hits){
-const c = chunk[i.index];
-console.log(`${i.score.toFixed(3)}  [块${i.index},它的text为:${i.text.slice(0,40)}]它的start = ${c.start}，end = ${c.end}`);
-}
-
-console.log(`============对照（文档里没有的问题）============`);
-const query = await embed([`西湖在哪里`]);
-
-const results = s.search(query.vectors[0],3);
-for(let i of results){
-const c = chunk[i.index];
-console.log(`${i.score.toFixed(3)}  [块${i.index},它的text为:${i.text.slice(0,40)}]它的start = ${c.start}，end = ${c.end}`);
-}
-
-}
 
 
 
@@ -114,8 +55,9 @@ module.exports = {ask};
 
 
 
+
+
 main().catch((err)=>{
     console.error('炸了',err);
     process.exit(1);
-})
-
+});

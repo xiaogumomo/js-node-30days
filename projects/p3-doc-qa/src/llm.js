@@ -7,6 +7,9 @@ const DEFAULT_PRICE_TABLE={
         inPerM :0.02 ,
         outPerM: 4,
     },
+    'glm-4-flash': {
+         inPerM: 0, outPerM: 0 
+    },
 
 }
   
