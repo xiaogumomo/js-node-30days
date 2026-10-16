@@ -1,0 +1,306 @@
+
+
+p1 
+✔ 00 模块能被 require，并导出 classify 函数 (1.2463ms)
+✔ 01 --apply 真的搬：源目录清空、目标按分类就位、每个文件的 sha256 与原来一致 (130.6337ms)
+✔ 02 重名冲突：两个子目录里的同名文件，一个都不许丢 (118.0229ms)
+✔ 03 建目录失败时：那一类的源文件原地不动、别的类照常搬、退出码非零 (118.8931ms)
+✔ 04 幂等：连跑两次，第二次不许把已经搬好的文件再搬一层（目标在源目录里面） (226.4132ms)
+
+探针（只记录，不判错）：
+  · --verbose 输出了 7 行：
+      {"level":30,"time":1792111261855,"file":"note.txt","category":"docs","msg":"搬运成功"}
+      {"level":30,"time":1792111261859,"file":"photo.jpg","category":"images","msg":"搬运成功"}
+      共 2 个文件,共计搬了2个文件，失败了0个文件
+      目标目录：C:\Users\27971\AppData\Local\Temp\p1-apply-lab-PEakhK\p1\dst
+        计划：note.txt → docs/  （C:\Users\27971\AppData\Local\Temp\p1-apply-lab-PEakhK\p1\src\note.txt）
+        计划：photo.jpg → images/  （C:\Users\27971\AppData\Local\Temp\p1-apply-lab-PEakhK\p1\src\photo.jpg）
+      共 2 个文件：images 1、docs 1、videos 0、others 0
+  · 不加 --verbose 的汇总：共 0 个文件,共计搬了0个文件，失败了0个文件 | 目标目录：C:\Users\27971\AppData\Local\Temp\p1-apply-lab-PEakhK\p1\dst2 | 共 0 个文件：images 0、docs 0、videos 0、others 0
+  · 撞名（两个 same.txt）之后，目标 docs/ 里是：docs\same(1).txt、docs\same.txt
+    源里还剩：（空）　退出码 0
+  · 搬完之后源目录里还剩：a（空目录，留着也没错）
+  （探针不判错：冲突策略、空目录留不留都是设计选择 —— 记进日志就行）
+
+
+判据覆盖面：00–07 共 8 条必过 + P 探针 1 条 = 本文件 9 条 test()。
+（报绿之前看一眼上面的 pass 数：大半是 skipped、pass 只有个位数，那不是绿，是没跑起来。）
+    · 06 是**看代码的合同检查**、05 是**规模冒烟** —— 两条都不证明"用了流"，详见文件顶部说明。
+✔ 05 大文件（24MB）搬得动、字节一模一样（规模冒烟 —— 不证明"用了流"） (277.9865ms)
+✔ 06 合同检查（**看代码**）：用流式复制，没有把整个文件读成一个字符串 (1.0068ms)
+✔ 07 模块能被 require 而没有副作用（不打印、不搬文件） (0.1341ms)
+✔ P 探针：--verbose 长什么样 / 冲突策略 / 汇总行 / 空目录留不留（只记录，不判错） (399.8985ms)
+
+探针（只记录，不判错；fixture = C:\Users\27971\AppData\Local\Temp\p1-cli-verify-YL8tag\inbox，跑完会删）：
+  · --verbose（退出码 0）：✅ 输出比默认更长
+  · --target：✅ 输出里出现了目标目录；目标目录没被创建 ✅
+  · 无参数（退出码 0）：✅ 有提示：计划：.gitkeep → others/
+  · 子目录：**递归了**（子目录里的文件也列出来了） ← 今天没规定，两种都行；**写进 README 的「已知限制」或设计说明**
+  （探针不判错：--verbose / --target / 用法提示 属砍单顺序里可以顺延的，欠了要登记进日志）
+
+
+判据覆盖面：00–07 共 8 条必过 + P 探针 1 条 = 本文件 9 条 test()。
+（报绿之前看一眼上面的 pass 数：大半是 skipped、pass 只有个位数，那不是绿，是没跑起来。）
+✔ 00 src/cli.js 能被 require，并导出 classify 函数 (1.3513ms)
+✔ 01 classify：分类规则（含大写、含没有扩展名的） (1.1266ms)
+✔ 02 干跑：打印计划 + 汇总 + 【文件一个都没动】 (100.8254ms)
+✔ 03 底线两条：干跑给 `--target` 也不许动（连目录都不建）；`--apply` 要么真搬、要么明说没实现 (232.419ms)
+✔ 04 源目录不存在：一句人话 + 非零退出码（不是崩栈） (106.9532ms)
+✔ 05 空目录：汇总 0，不报错 (104.6943ms)
+✔ 06 模块能被 require 而不会顺手把 CLI 入口跑起来 (0.2219ms)
+✔ 07 汇总行的四个分类都出现（顺序固定：images、docs、videos、others） (117.664ms)
+✔ P 探针：--verbose / --target / 无参数 / 子目录（只记录，不判错） (514.6151ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2114.4113
+
+
+p2
+
+✔ 00 模块能被加载，并导出 buildServer 函数 (1973.8003ms)
+2026-10-16T00:43:05.880ZPOST/auth/register
+✔ 01 注册 → 201，而且**密码没有明文落库 / 没有回给客户端** (123.1229ms)
+2026-10-16T00:43:05.970ZPOST/auth/register
+2026-10-16T00:43:06.019ZPOST/auth/register
+✔ 02 同一个邮箱注册两次 → 409/400（不是 201、更不能 500） (102.3301ms)
+2026-10-16T00:43:06.073ZPOST/auth/register
+2026-10-16T00:43:06.136ZPOST/auth/login
+✔ 03 登录成功 → 200 + 非空 token (111.019ms)
+2026-10-16T00:43:06.182ZPOST/auth/register
+2026-10-16T00:43:06.232ZPOST/auth/login
+2026-10-16T00:43:06.278ZPOST/auth/login
+✔ 04 密码错 / 没这个邮箱 → 401 (100.7821ms)
+2026-10-16T00:43:06.284ZGET/tasks
+✔ 05 不带 token 访问 /tasks → 401 + JSON (5.0386ms)
+2026-10-16T00:43:06.291ZPOST/auth/register
+2026-10-16T00:43:06.335ZPOST/auth/login
+2026-10-16T00:43:06.377ZGET/tasks
+✔ 06 带 token 访问 /tasks → 200 + 数组 (94.5486ms)
+2026-10-16T00:43:06.383ZPOST/auth/register
+2026-10-16T00:43:06.433ZPOST/auth/login
+2026-10-16T00:43:06.473ZPOST/auth/register
+2026-10-16T00:43:06.513ZPOST/auth/login
+2026-10-16T00:43:06.561ZPOST/tasks
+2026-10-16T00:43:06.569ZGET/tasks
+2026-10-16T00:43:06.572ZGET/tasks/1
+2026-10-16T00:43:06.575ZPATCH/tasks/1
+2026-10-16T00:43:06.578ZDELETE/tasks/1
+✔ 07 **隔离**：A 的任务，B 看不到、也改不到（一律 404） (200.0979ms)
+2026-10-16T00:43:06.583ZGET/tasks
+
+探针（只记录，不判错）：
+✔ 08 乱码 / 伪造的 token → 401（不能 500） (2.112ms)
+2026-10-16T00:43:06.586ZPOST/auth/register
+2026-10-16T00:43:06.629ZPOST/auth/login
+  · token 分成 3 段（标准 JWT 是 3 段：header.payload.signature）
+  · token 头部：{"alg":"HS256","typ":"JWT"}（看 alg，比如 HS256）
+  · users 表里那一行长这样：{"id":1,"email":"reg-1792111385844-434688@test.local","passwordhash":"scrypt$3c303b7c9f6b2745d4039df20eccf8c2$28cd45394b6c09d9b924976a5b56b8576d12c76de4e139c47e
+  · 看起来像哈希吗：像 ✓
+  · 迁移目录：db/migrations
+  （探针不判错：哈希算法、token 格式、列名怎么起，都是设计选择 —— 记进日志就行）
+
+
+判据覆盖面：00–08 共 9 条必过 + P 探针 1 条 = 本文件 10 条 test()。
+（报绿之前看一眼上面的 pass 数：大半是 skipped，那不是绿，是没跑起来。）
+✔ P 探针：token 结构 / 库里那条哈希长什么样 / 迁移文件（只记录，不判错） (100.2164ms)
+✔ hashPassword(“same”) 两次需要不相等  (2282.874ms)
+✔ hashPassword(“same”) 存起来的串以scrypt$开头 (41.3043ms)
+✔ verifyPassword 对密码→ true,错一个字符 → false (138.828ms)
+✔ signJwt({sub:7},60) → verifyJwt(...)拿回 sub===7 把中间一个字符改掉 → null；过期（ttlSec=-1）→ null (1.625ms)
+2026-10-16T00:43:06.140ZGET/tasks
+✔ '01 不带 token 打 /tasks → 401 + JSON (53.3451ms)
+2026-10-16T00:43:06.160ZGET/tasks
+✔ 02  乱码 token 401（含三段垃圾 'aaa.bbb.ccc' —— 这条会先红） (5.4201ms)
+2026-10-16T00:43:06.165ZPOST/auth/register
+2026-10-16T00:43:06.210ZPOST/auth/login
+2026-10-16T00:43:06.261ZPOST/auth/login
+2026-10-16T00:43:06.266ZPOST/auth/login
+✔ 05 密码错与邮箱不存在 401  (145.2356ms)
+2026-10-16T00:43:06.308ZPOST/auth/register
+2026-10-16T00:43:06.310ZPOST/auth/register
+2026-10-16T00:43:06.311ZPOST/auth/login
+✔ 06 注册校验：邮箱没 @ / 密码 5 位 → 400，且都没落库 (7.4215ms)
+2026-10-16T00:43:06.315ZPOST/auth/register
+💥 FastifyError: Body is not valid JSON but content-type is set to 'application/json'
+    at Parser.defaultJsonParser [as fn] (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\content-type-parser.js:331:12)
+    at IncomingMessage.onEnd (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\content-type-parser.js:311:27)
+    at IncomingMessage.emit (node:events:514:28)
+    at endReadableNT (node:internal/streams/readable:1764:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'FST_ERR_CTP_INVALID_JSON_BODY',
+  statusCode: 400
+}
+2026-10-16T00:43:06.321ZGET/health
+✔ 08 畸形 JSON → 400（这条也会先红） (8.8684ms)
+2026-10-16T00:43:06.326ZPOST/auth/register
+2026-10-16T00:43:06.367ZPOST/auth/login
+2026-10-16T00:43:06.414ZGET/tasks/abc
+2026-10-16T00:43:06.415ZPOST/tasks
+2026-10-16T00:43:06.420ZPOST/tasks
+2026-10-16T00:43:06.426ZGET/tasks
+✔ 非数字 id → 404（不是 500）＋ 列表按 id 升序 (107.9178ms)
+2026-10-16T00:43:06.433ZPOST/auth/register
+2026-10-16T00:43:06.473ZPOST/auth/login
+2026-10-16T00:43:06.512ZGET/tasks
+2026-10-16T00:43:06.515ZPOST/tasks
+2026-10-16T00:43:06.516ZGET/tasks
+✔ 09 空 title → 400 且列表不多一条  (89.3461ms)
+2026-10-16T00:43:06.522ZPOST/auth/register
+2026-10-16T00:43:06.571ZPOST/auth/login
+2026-10-16T00:43:06.613ZPOST/tasks
+2026-10-16T00:43:06.618ZPATCH/tasks/3
+2026-10-16T00:43:06.627ZGET/tasks/3
+2026-10-16T00:43:06.631ZGET/tasks/3
+2026-10-16T00:43:06.634ZPATCH/tasks/3
+2026-10-16T00:43:06.637ZGET/tasks/3
+✔ 10  PATCH done 再 GET 确认+ 空 body 不改字段   (118.5276ms)
+2026-10-16T00:43:06.640ZPOST/auth/register
+2026-10-16T00:43:06.681ZPOST/auth/login
+2026-10-16T00:43:06.718ZPOST/auth/register
+2026-10-16T00:43:06.761ZPOST/auth/login
+2026-10-16T00:43:06.798ZPOST/tasks
+2026-10-16T00:43:06.803ZGET/tasks/4
+2026-10-16T00:43:06.806ZGET/tasks/4
+2026-10-16T00:43:06.807ZPATCH/tasks/4
+2026-10-16T00:43:06.809ZDELETE/tasks/4
+2026-10-16T00:43:06.812ZGET/tasks
+✔ 11 隔离（列表不含别人的 + GET/PATCH/DELETE 各一条 404）  (175.0544ms)
+2026-10-16T00:43:06.815ZPOST/auth/register
+2026-10-16T00:43:06.851ZPOST/auth/login
+2026-10-16T00:43:06.887ZPOST/tasks
+2026-10-16T00:43:06.893ZDELETE/tasks/5
+2026-10-16T00:43:06.897ZDELETE/tasks/5
+2026-10-16T00:43:06.900ZGET/tasks/5
+✔ 12 DELETE 自己的 → 再 GET 404。 (88.414ms)
+2026-10-16T00:43:05.881ZPOST/auth/register
+2026-10-16T00:43:05.950ZPOST/auth/login
+✔ 00 模块能被加载，并导出 buildServer 函数 (2125.5494ms)
+2026-10-16T00:43:06.004ZGET/health
+✔ 01 GET /health → 200 + JSON {"ok":true} (4.5171ms)
+2026-10-16T00:43:06.010ZGET/tasks
+✔ 02 GET /tasks → 200 + JSON 数组（今天返回空数组就行） (9.2155ms)
+2026-10-16T00:43:06.019ZGET/%E8%BF%99%E4%B8%AA%E8%B7%AF%E7%94%B1%E4%B8%8D%E5%AD%98%E5%9C%A8
+✔ 03 未知路径 → 404，且**body 是 JSON**（不是 HTML 错误页） (7.0124ms)
+2026-10-16T00:43:06.027ZGET/boom
+💥 Error: boom
+    at Object.<anonymous> (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\src\server.js:117:20)
+    at preHandlerCallbackInner (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:203:24)
+    at preHandlerCallback (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:168:5)
+    at validationCompleted (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:158:5)
+    at preValidationCallback (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:135:5)
+    at handler (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:105:7)
+    at Object.handleRequest (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:36:5)
+    at runPreParsing (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\route.js:661:19)
+    at next (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\hooks.js:236:9)
+    at handleResolve (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\hooks.js:253:7)
+2026-10-16T00:43:06.032ZGET/health
+✔ 04 统一错误处理：/boom 抛错 → 500 + JSON，而且**进程不许崩** (9.9717ms)
+
+探针（只记录，不判错）：
+✔ 05 直接运行 src/server.js 真的能起起来（读 PORT，能访问 /health） (543.2209ms)
+2026-10-16T00:43:06.578ZGET/health
+  · GET /health 的响应头：{"connection":"keep-alive","content-length":"11","content-type":"application/json; charset=utf-8","date":"Fri, 16 Oct 2026 00:43:06 GMT","keep-alive":"timeout=72"}
+2026-10-16T00:43:06.580ZGET/nope
+  · 404 的 content-type = application/json; charset=utf-8，body = {"message":"Route GET:/nope not found","error":"Not Found","statusCode":404}
+2026-10-16T00:43:06.584ZGET/boom
+💥 Error: boom
+    at Object.<anonymous> (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\src\server.js:117:20)
+    at preHandlerCallbackInner (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:203:24)
+    at preHandlerCallback (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:168:5)
+    at validationCompleted (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:158:5)
+    at preValidationCallback (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:135:5)
+    at handler (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:105:7)
+    at Object.handleRequest (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\handle-request.js:36:5)
+    at runPreParsing (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\route.js:661:19)
+    at next (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\hooks.js:236:9)
+    at handleResolve (C:\Users\27971\.zcode\workspace\default\js-node-30days\projects\p2-task-api\node_modules\.pnpm\fastify@5.12.5\node_modules\fastify\lib\hooks.js:253:7)
+  · 500 的 content-type = application/json; charset=utf-8，body = {"error":"服务器开小差啦"}
+2026-10-16T00:43:06.587ZGET/health
+  · 一次 /health 往返耗时 ≈ 2ms
+  （探针不判错：响应头里多什么字段、404 的文案怎么写，都是设计选择 —— 记进日志就行）
+
+
+判据覆盖面：00–05 共 6 条必过 + P 探针 1 条 = 本文件 7 条 test()。
+（报绿之前看一眼上面的 pass 数：大半是 skipped，那不是绿，是没跑起来。）
+✔ P 探针：响应头 / 404 的 body / 启动耗时（只记录，不判错） (11.8587ms)
+2026-10-16T00:43:05.881ZPOST/auth/register
+2026-10-16T00:43:05.951ZPOST/auth/login
+✔ 00 模块能被加载，并导出 buildServer 函数 (2106.0259ms)
+2026-10-16T00:43:06.003ZPOST/tasks
+✔ 01 POST /tasks → 201 + JSON，且返回非空 id (11.7023ms)
+2026-10-16T00:43:06.014ZPOST/tasks
+2026-10-16T00:43:06.025ZGET/tasks
+✔ 02 GET /tasks → 200 + JSON 数组，且里面能找到刚创建的那条 (21.0386ms)
+2026-10-16T00:43:06.035ZPOST/tasks
+2026-10-16T00:43:06.043ZGET/tasks/3
+2026-10-16T00:43:06.051ZGET/tasks/999999
+✔ 03 GET /tasks/:id → 200 + 那条；不存在的 id → 404 + JSON (24.7057ms)
+2026-10-16T00:43:06.060ZPOST/tasks
+2026-10-16T00:43:06.069ZPATCH/tasks/4
+2026-10-16T00:43:06.081ZGET/tasks/4
+✔ 04 PATCH /tasks/:id 改字段 → 200 + 新值（再 GET 确认已落库） (26.925ms)
+2026-10-16T00:43:06.089ZPOST/tasks
+2026-10-16T00:43:06.096ZDELETE/tasks/5
+2026-10-16T00:43:06.103ZGET/tasks/5
+✔ 05 DELETE /tasks/:id → 200/204；再 GET → 404 (22.035ms)
+✔ 06 跨进程持久化：换个进程起同一个 DB_URL，数据还在（防"内存数组假数据库"） (1109.0526ms)
+2026-10-16T00:43:07.217ZPOST/tasks
+
+探针（只记录，不判错）：
+  · 建表/迁移相关文件：db/migrations、src/db.js
+✔ 07 POST /tasks 不带 title → 400/422 + JSON（校验真的生效） (2.5605ms)
+2026-10-16T00:43:07.223ZGET/tasks
+  · GET /tasks 的响应头：{"content-type":"application/json; charset=utf-8"}
+2026-10-16T00:43:07.228ZGET/tasks?done=true
+  · GET /tasks?done=true → 200，数组 5 条（可选功能：过滤还没做也没关系，记进日志就行）
+2026-10-16T00:43:07.231ZGET/health
+  · 一次 /health 往返耗时 ≈ 1ms
+  （探针不判错：用什么 ORM、表怎么建、错误文案怎么写，都是设计选择 —— 记进日志就行）
+
+
+判据覆盖面：00–07 共 8 条必过 + P 探针 1 条 = 本文件 9 条 test()。
+（报绿之前看一眼上面的 pass 数：大半是 skipped，那不是绿，是没跑起来。）
+✔ P 探针：建表/迁移文件 / ?done= 过滤 / 响应头 / 耗时（只记录，不判错） (12.4326ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3905.604
+
+
+p3
+
+✔ 01 正常调用：请求形状 + 返回形状都对 (63.2275ms)
+✔ 02 缺 key：立刻抛错（不许打网络），错误信息里要点名 DEEPSEEK_API_KEY (5.1427ms)
+✔ 03 一直 500：重试到上限后抛（err.status=500，命中 3 次 = 首次 + 2 次重试） (72.2677ms)
+✔ 04 429 一次后成功：要重试，且最终成功 (23.1868ms)
+✔ 05 连接被掐两次后成功：网络错也要重试 (70.6567ms)
+✔ 06 400：立刻抛，一次都不许重试 (4.5894ms)
+✔ 07 超时：服务器挂住 + timeoutMs=300 → 短时间抛错，不会永远等 (303.9713ms)
+✔ 08 日志：成功记一条带 model/status/latencyMs/attempt 的记录；任何一条里都不许出现 key (4.658ms)
+✔ 09 estimateCost 纯函数：整数价格表精确算 + 未知模型抛错 (0.3254ms)
+✔ 10 成本集成：一次真实调用后 cost = 按注入价格表算出的精确值 (4.0895ms)
+✔ 01 cosineSimilarity：同向 = 1、正交 = 0、反向 = -1 (1.1447ms)
+✔ 02 零向量 → 返回 0（不许 NaN、不许抛） (0.1581ms)
+✔ 03 空库：size() = 0，search() = [] (0.6034ms)
+✔ 04 upsert 追加：写 2 条再写 1 条 → size = 3，返回值是本次写的条数 (0.1697ms)
+✔ 05 search 按相似度降序取 topK (0.253ms)
+✔ 06 topK 大于库大小 → 返回全部；不传 topK → 默认 3 (0.1641ms)
+✔ 07 两个 store 实例互不干扰 (0.12ms)
+✔ 08 upsert 元素不合法 → 抛 TypeError（不许静默入库） (0.2149ms)
+ℹ tests 54
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 4
+ℹ todo 0
+ℹ duration_ms 3663.8366
