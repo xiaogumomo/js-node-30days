@@ -34,7 +34,7 @@ jobs:
             pnpm install --frozen-lockfile --dir week1-language/p0-toolkit
             pnpm install --frozen-lockfile --dir projects/p2-task-api
             pnpm install --frozen-lockfile --dir  projects/p1-cli-organizer
-
+            pnpm install --frozen-lockfile --dir projects/p3-doc-qa
         - name: 类型检查
           working-directory : week1-language/p0-toolkit
           run: pnpm exec tsc --noEmit 
