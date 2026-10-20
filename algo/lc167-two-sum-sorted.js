@@ -5,6 +5,9 @@
 
 function   twoSum(numbers, target){//输入数组 和和 返回下标从1开始的对应数值刚好相加为target O(n) O(1)
 
+    //left / right 相向
+    //和的大小决定动哪边
+
     let left = 0 ;
     let right = numbers.length-1 ;
     
