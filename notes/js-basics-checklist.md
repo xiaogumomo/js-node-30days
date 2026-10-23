@@ -3,7 +3,7 @@
 > **为什么有这张表**：他说"关于 JS 部分我还是有点不放心，就这么点内容吗？"→ 核对后发现：我按"**概念机制**"排了 7 块，但"**工具层**"（函数/数组/字符串/Object/Error/Map）**默认"用过"就没系统讲** ✗ —— 这是真实的缺口，补上 ✓
 > **验收四条**（每块都要）：① 能跑（示例/判据）② 合上讲 5 分钟 ③ 一图一表 ④ 能答 2 个追问
 
-## 一、已过（6 块 ✓）
+## 一、已过（10 块 ✓）
 
 | # | 块 | 时间 |
 |---|---|---|
@@ -12,18 +12,17 @@
 | 3 | 闭包（捕获的是绑定 / IIFE / 模块模式）| 10/18 ✓ |
 | 4 | this 与对象（五种绑定 / 箭头 / 属性描述符）| 10/18 ✓ |
 | 5 | 原型·行为委托·class | 10/19 ✓ |
-| 6 | 事件循环 · 异步 · Promise（**讲义已过，写部分待做**）| 10/21 ◐ |
+| 6 | 事件循环 · 异步 · Promise（**含"写"部分 A–D**）| 10/22 ✓ |
+| 7 | **正则**（`^ $` / 字符类 / 量词 / 贪婪 vs 惰性 / `g`·`i` / `replace` 回调 / `lastIndex`）| 10/22 ✓ |
+| 8 | **函数**（参数 / 箭头 vs 普通 / 纯函数·副作用 / 高阶 / `bind` 柯里化 / 递归 / IoC / `compose`）| 10/23 ✓ |
+| 9 | **数组方法**（`map/filter/reduce` 初值 / `sort` 比较器 —— 默认按字符串，**前缀规则** / `slice` vs `splice` / `forEach` 不能 break / `find`·`findIndex` / `flat`）| 10/23 ✓ |
+| 10 | **字符串方法**（码元 vs 码点 / `slice` vs `substring` / `replace` 只换第一个 / `split`·`join` / `padStart` / `trim` 去不掉 `\u200b`）| 10/23 ✓ |
 
-## 二、待补（8 块 ⬜ —— 这就是他担心的部分）
+## 二、待补（3 块 ⬜）
 
 | # | 块 | 要讲什么（要点） | 排期 |
 |---|---|---|---|
-| 6b | **异步的"写"部分** | 3 段示例重打（微任务顺序 / 链+错误冒泡 / 串行 200ms vs 并行 100ms）+ A→B→C→D | **10/22** |
-| 7 | **正则** | `^ $` / `\d \w \s` / `+ * ?` / `{n,m}` / `[]` / `()` / 贪婪 vs 惰性 / `g`·`i` / `replace` 回调 / `test` vs `match` | **10/22**（30'）|
-| 8 | **函数** | 参数（默认值/rest/解构）、箭头 vs 普通（this/arguments/new/prototype）、**纯函数·副作用**、高阶函数、`bind` 柯里化 | **10/22** |
-| 9 | **数组方法** | `map/filter/reduce`（**初值**）、`sort`（**比较器**：默认按字符串！）、`slice` vs `splice`、`forEach` 不能 break、`find/includes/indexOf`、`flat/flatMap` | **10/23** |
-| 10 | **字符串方法** | `slice/substring/substr`（三者差别）、`replace` 的回调、`split/join`、`padStart`、`trim`、模板字符串 | **10/23** |
-| 11 | **Object 工具** | `keys/values/entries`、`assign`（**浅**）、`freeze/seal`、`create`、`defineProperty`（默认全 false）、`hasOwn`、`getPrototypeOf` | **10/23** |
+| 11 | **Object 工具** | `keys/values/entries`、`assign`（**浅**）、`freeze/seal`、`create`、`defineProperty`（默认全 false）、`hasOwn`、`getPrototypeOf` | **10/24** |
 | 12 | **错误处理** | `try/catch/finally`（finally 的返回值陷阱）、`Error` 子类（`class X extends Error`）、`cause`、**错误分类**（用户错/系统错/可重试）、`err.stack` | **10/24** |
 | 13 | **Map / Set / WeakMap** | `Map` vs 对象（**任意类型当键 / 有 size / 保序**）、`Set` 去重、`WeakMap`（**对象当键 + 自动回收**，私有数据）、`WeakSet` | **10/24** |
 
@@ -53,8 +52,8 @@
 
 | 天 | 块 | 大约 |
 |---|---|---|
-| **10/22** | 异步写部分（6b）+ 正则（7）+ 函数（8）| 3.5h |
-| **10/23** | 数组（9）+ 字符串（10）+ Object 工具（11）| 3.5h |
-| **10/24** | 错误处理（12）+ Map/Set/WeakMap（13）+ **第 1 遍总回访**（挑 10 条讲 5 分钟）| 3h |
+| **10/22** | 异步写部分（6b）+ 正则（7）| ✓ |
+| **10/23** | 函数 A–D（8）+ 数组（9）+ 字符串（10）| ✓ |
+| **10/24** | Object 工具（11）+ 错误处理（12）+ Map/Set/WeakMap（13）+ **第 1 遍总回访** | 6h（周六全天）|
 
 → 之后 **10/25 起进 A2 协议**（TCP/UDP + HTTP，主计划原样 ✓）
