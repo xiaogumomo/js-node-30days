@@ -3,7 +3,7 @@
 > **为什么有这张表**：他说"关于 JS 部分我还是有点不放心，就这么点内容吗？"→ 核对后发现：我按"**概念机制**"排了 7 块，但"**工具层**"（函数/数组/字符串/Object/Error/Map）**默认"用过"就没系统讲** ✗ —— 这是真实的缺口，补上 ✓
 > **验收四条**（每块都要）：① 能跑（示例/判据）② 合上讲 5 分钟 ③ 一图一表 ④ 能答 2 个追问
 
-## 一、已过（10 块 ✓）
+## 一、已过（14 块 ✓）
 
 | # | 块 | 时间 |
 |---|---|---|
@@ -17,14 +17,18 @@
 | 8 | **函数**（参数 / 箭头 vs 普通 / 纯函数·副作用 / 高阶 / `bind` 柯里化 / 递归 / IoC / `compose`）| 10/23 ✓ |
 | 9 | **数组方法**（`map/filter/reduce` 初值 / `sort` 比较器 —— 默认按字符串，**前缀规则** / `slice` vs `splice` / `forEach` 不能 break / `find`·`findIndex` / `flat`）| 10/23 ✓ |
 | 10 | **字符串方法**（码元 vs 码点 / `slice` vs `substring` / `replace` 只换第一个 / `split`·`join` / `padStart` / `trim` 去不掉 `\u200b`）| 10/23 ✓ |
+| 11 | **Object 工具**（键顺序三档 / `keys`·`entries`·`fromEntries` / `assign` vs 展开 = 浅 / `freeze`·`seal`·`preventExtensions` / `defineProperty` 默认全 false / `hasOwn` vs `in` / `Object.is` / `create(null)` / 计算键 `['__proto__']`）| 10/24 ✓（`deepFreeze` 里 `for...in` 待换成 `Reflect.ownKeys`）|
+| 11b | **JSON 序列化**（`stringify` 丢什么 / `NaN→null` / `BigInt`·循环引用 → TypeError / `toJSON` / `replacer` 两形态 / `reviver` / JSON 法深拷贝 6 处丢失 / `structuredClone`）| 10/24 ✓ |
 
-## 二、待补（3 块 ⬜）
+| 12 | **错误处理**（`finally` 的 return 吞异常 / `class X extends Error` 必须手设 `this.name` / `cause` 保留根因 / 错误分类 4 类 / `err.code` vs message）| 10/24 ✓ |
+| 13 | **Map / Set / WeakMap**（键按 SameValueZero、认引用 / Map 纯插入序 vs 对象整数键升序 / `size` 是属性 / WeakMap 不可迭代·无 size / 私有数据）| 10/24 ✓ |
 
-| # | 块 | 要讲什么（要点） | 排期 |
-|---|---|---|---|
-| 11 | **Object 工具** | `keys/values/entries`、`assign`（**浅**）、`freeze/seal`、`create`、`defineProperty`（默认全 false）、`hasOwn`、`getPrototypeOf` | **10/24** |
-| 12 | **错误处理** | `try/catch/finally`（finally 的返回值陷阱）、`Error` 子类（`class X extends Error`）、`cause`、**错误分类**（用户错/系统错/可重试）、`err.stack` | **10/24** |
-| 13 | **Map / Set / WeakMap** | `Map` vs 对象（**任意类型当键 / 有 size / 保序**）、`Set` 去重、`WeakMap`（**对象当键 + 自动回收**，私有数据）、`WeakSet` | **10/24** |
+## 二、待补（0 块 ⬜ —— 第 1 遍已收官）
+
+| 项 | 状态 |
+|---|---|
+| **JS 基础第 1 遍（14 块 + JSON）** | **2026-10-24 全部走完 ✓**（08:21–18:26，实际 553 分钟）|
+| 总回访 | 13/14（`Number('0b101')` 一次没答对 → 留待明日短测）|
 
 ## 三、只到 L3（知道存在；用到再查，**不排课**）
 
