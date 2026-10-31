@@ -23,21 +23,22 @@ function toArray(head){
 
 
 
-var reverseList = function(arr) {
-
-    let head = build(arr);
+var reverseList = function(head) {
     let prev = null ;
     let cur = head ;
     while(cur){
-        let next = cur.next ;
+         next = cur.next ;
         cur.next = prev ;
         prev = cur ;
         cur = next ;
     }
-    return toArray(prev) ;
+    return prev ;
 };
 
-console.log(reverseList([]));
-console.log(reverseList([1]));
-console.log(reverseList([1,2]));
-console.log(reverseList([1,2,3,4,5]));
+console.log(toArray(reverseList(build([]))));
+console.log(toArray(reverseList(build([1]))));
+console.log(toArray(reverseList(build([1,2]))));
+console.log(toArray(reverseList(build([1,2,3,4,5]))));
+
+
+
