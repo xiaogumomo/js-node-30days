@@ -113,7 +113,7 @@
 → 正好对上 `plan-next-8weeks.md` 第 2 段（11/03 起）：**先 Redis → 再 Nginx → Linux → 监控，Kafka 排最后**（校招出现频率的顺序）。
 
 
-
+领导给的有关就业的学习方向：
 
 1， JAVASCRIPT基础： 基本数据类型， 初始化，  函数闭包； （ JavaScript权威指南 你不知道的JavaScript），  TypeScript程序设计   至少看2遍
 

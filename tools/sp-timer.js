@@ -45,6 +45,25 @@ async function startById(id) {
   return j.data;
 }
 
+// 当前正在计时的任务 id（GET /status）
+async function currentId() {
+  const res = await fetch(BASE + '/status', { headers: H });
+  const j = await res.json();
+  return (j.data && j.data.currentTaskId) || null;
+}
+
+// 把某个任务标记为完成
+async function doneById(id) {
+  const res = await fetch(BASE + '/tasks/' + id, {
+    method: 'PATCH',
+    headers: H,
+    body: JSON.stringify({ isDone: true }),
+  });
+  const j = await res.json();
+  if (!res.ok || j.ok === false) throw new Error(JSON.stringify(j));
+  return j.data;
+}
+
 const cmd = process.argv[2];
 
 (async () => {
@@ -92,8 +111,58 @@ const cmd = process.argv[2];
     }
     await startById(idle.id);
     console.log('⏹ 已停表（当前任务是"下班"占位）');
+  } else if (cmd === 'done') {
+    // done [关键词]：不给关键词就完成"当前正在计时的那个"
+    const kw = process.argv[3];
+    const list = await tasks();
+    let target = null;
+    if (kw) {
+      const hit = list.filter((t) => String(t.title).includes(kw) && !t.isDone);
+      if (hit.length !== 1) {
+        console.error(hit.length ? `⚠️ 匹配到 ${hit.length} 条，写具体点` : `❌ 没找到包含 "${kw}" 的未完成任务`);
+        process.exit(1);
+      }
+      target = hit[0];
+    } else {
+      const cid = await currentId();
+      if (!cid) {
+        console.error('❌ 当前没有在计时的任务');
+        process.exit(1);
+      }
+      target = list.find((t) => t.id === cid);
+      if (!target) {
+        console.error('❌ 当前任务不在未完成列表里');
+        process.exit(1);
+      }
+    }
+    await doneById(target.id);
+    console.log('✅ 已打勾：' + target.title);
+  } else if (cmd === 'next') {
+    // next "<关键词>"：完成当前计时中的任务 → 立刻开始下一个（一步换格）
+    const kw = process.argv[3];
+    if (!kw) {
+      console.error('用法：node tools/sp-timer.js next "<下一格标题片段>"');
+      process.exit(1);
+    }
+    const cid = await currentId();
+    if (cid) {
+      const list = await tasks();
+      const cur = list.find((t) => t.id === cid);
+      if (cur && cur.title !== '下班' && !cur.isDone) {
+        await doneById(cid);
+        console.log('✅ 已打勾：' + cur.title);
+      }
+    }
+    const list2 = await tasks();
+    const hit = list2.filter((t) => String(t.title).includes(kw) && !t.isDone);
+    if (hit.length !== 1) {
+      console.error(hit.length ? `⚠️ 匹配到 ${hit.length} 条，写具体点：\n  ` + hit.map((t) => t.title).join('\n  ') : `❌ 没找到包含 "${kw}" 的未完成任务`);
+      process.exit(1);
+    }
+    await startById(hit[0].id);
+    console.log('▶ 开始计时：' + hit[0].title);
   } else {
-    console.log('用法：status | start "<标题片段>" | stop');
+    console.log('用法：status | start "<标题片段>" | done [关键词] | next "<标题片段>" | stop');
   }
 })().catch((e) => {
   console.error('❌', e.message);

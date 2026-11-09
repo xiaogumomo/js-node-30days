@@ -23,4 +23,4 @@ const server = http.createServer((req,res)=>{
 });
 
  server.listen(9001,'127.0.0.1',()=> console.log('http://127.0.0.1:9001'));
- server.on('error',()=>console.log('server Error' ,e.code));
+ server.on('error',(e)=>console.log('server Error' ,e.code));
