@@ -81,7 +81,7 @@ const flag = (name, def) => {
   const i = process.argv.indexOf('--' + name);
   return i > -1 ? process.argv[i + 1] : def;
 };
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
 const mmss = (ms) => `${Math.round((ms || 0) / 60000)}m`;
 const row = (t) => `${t.isDone ? '✔' : '·'} ${mmss(t.timeEstimate).padStart(5)} ${String(t.id).padEnd(24)} ${t.title}`;
 

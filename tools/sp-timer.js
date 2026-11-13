@@ -30,7 +30,7 @@ function token() {
   process.exit(1);
 }
 const H = { authorization: 'Bearer ' + token(), 'content-type': 'application/json' };
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
 const mmss = (ms) => Math.floor(ms / 60000) + 'm';
 
 async function tasks() {
