@@ -1,0 +1,24 @@
+{
+  "name": "js-node-30days",
+  "version": "1.0.0",
+  "description": "JavaScript + Node.js 30 天实习冲刺（2026-09-11 → 2026-10-14，32 个学习日）",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaogumomo/js-node-30days.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/xiaogumomo/js-node-30days/issues"
+  },
+  "homepage": "https://github.com/xiaogumomo/js-node-30days#readme",
+  "dependencies": {
+    "ioredis": "^6.0.0"
+  }
+}
