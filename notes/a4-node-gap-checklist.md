@@ -164,3 +164,72 @@ sub.on('pmessage', (pattern, channel, message) => {});   // ← 三个参数
    例：`transaction.d.ts` 里才有 `pipeline()`/`multi()` 的签名（它们是 mixin 挂到原型上的，不在 `Redis.d.ts` → **别以为没有**）。
 2. **实测**：`console.log(JSON.stringify(await redis.xxx(...)))` —— 他 11/20 自己发明的办法，对付嵌套返回最有效。
 3. **规则（写给我的）**：凡是"**返回形状**"的表，**每一项都必须带"已实测"标记**，不许凭记忆写。
+
+---
+
+## 五、返回形状实测表（2026-11-22 实测，ioredis 6.0.0 / Redis 7.4.12）
+
+> **探针**：一次性脚本 `redis/_probe-shapes.js`（跑完已删），**40 条命令 × RESP2 / RESP3 各跑一遍**。
+> ⭐ **结论先行：RESP2 与 RESP3 的返回形状【完全一致】**（40/40 无差异）—— ioredis 做了归一化，**换协议不用改代码**（形状层面）。
+> ⚠️ 但"订阅连接能不能发普通命令"这类**行为**差别是真的（见 §11）。
+
+### 1 键管理
+| redis-cli | Node | 实测返回 |
+|---|---|---|
+| `SET k v EX 100 NX` | `r.set(k,v,'EX',100,'NX')` | `"OK"`；**已存在 → `null`** |
+| `EXISTS k1 k2` | `r.exists(k1,k2)` | `1`（数字计数） |
+| `TYPE k` | `r.type(k)` | `"string"` |
+| `TTL k` | `r.ttl(k)` | **无过期 `-1` / 不存在 `-2`** |
+| `OBJECT ENCODING k` | `r.object('ENCODING',k)` | `"embstr"` |
+| `MEMORY USAGE k` | `r.memory('USAGE',k)` | `64` |
+| `SCAN 0 MATCH p:k* COUNT 10` | `r.scan(0,'MATCH','p:k*','COUNT',10)` | **`["12",["p:k1"]]`** ← 游标是**字符串**，`'0'` 才结束 |
+| `KEYS p:k*` | `r.keys('p:k*')` | `["p:k1"]` |
+
+### 2 字符串
+| `MGET k1 nope` | `r.mget(k1,nope)` | `["hello",null]` |
+| `INCR k` | `r.incr(k)` | `1`（**数字**） |
+| `INCRBYFLOAT k 1.5` | `r.incrbyfloat(k,1.5)` | **`"1.5"`（字符串）** |
+| `GETRANGE k 0 0` | `r.getrange(k,0,0)` | `"h"` |
+| `STRLEN k` | `r.strlen(k)` | `5` |
+
+### 3 哈希
+| `HGETALL k` | `r.hgetall(k)` | **对象** `{"a":"1","b":"2"}` |
+| `HMGET k a zz` | `r.hmget(k,'a','zz')` | **数组** `["1",null]` |
+| `HSCAN k 0` | `r.hscan(k,0)` | `["0",["a","1","b","2"]]` ← **扁平数组，不是对象** |
+| `HINCRBY` | `r.hincrby(k,f,2)` | `2`（数字） |
+
+### 4 列表
+| `LPOP k` | `r.lpop(k)` | `"a"`（字符串） |
+| `LPOP k 2` | `r.lpop(k,2)` | `["a","b"]`（**数组**） |
+| `LRANGE` | `r.lrange(k,0,-1)` | `["d"]` |
+| `BLPOP nolist 0.1` | `r.blpop(k,0.1)` | **超时 → `null`**；成功 → `[key, value]` |
+| `LMOVE a b LEFT LEFT` | `r.lmove(a,b,'LEFT','LEFT')` | `"x"` |
+
+### 5 集合
+| `SMEMBERS` | `r.smembers(k)` | `["x","z"]`（顺序不保证） |
+| `SISMEMBER` | `r.sismember(k,'x')` | **`1`，不是 `true`** |
+| `SMISMEMBER k x y` | `r.smismember(k,'x','y')` | `[1,0]` |
+| `SINTER a b` | `r.sinter(a,b)` | `["x"]` |
+| `SINTERCARD 2 a b` | `r.sintercard(2,a,b)` | `1` |
+
+### 6 有序集合
+| `ZADD k NX 10 a` | `r.zadd(k,'NX',10,'a')` | `0`（NX 且已存在） |
+| `ZRANGE 0 -1 WITHSCORES` | `r.zrange(k,0,-1,'WITHSCORES')` | **`["a","10","b","20"]`** ← 扁平 + 分数是**字符串** |
+| `ZRANGE 5 15 BYSCORE` | `r.zrange(k,5,15,'BYSCORE')` | `["a"]` |
+| `ZRANK` / `ZSCORE` | `r.zrank(k,'a')` / `r.zscore(k,'a')` | `0` / **`"10"`** |
+| `ZPOPMIN` | `r.zpopmin(k)` | `["a","10"]` |
+
+### 7 Bitmaps / HLL / GEO
+| `SETBIT k 7 1` | `r.setbit(k,7,1)` | **`0` = 原来的位值**（不是成功） |
+| `GETBIT` / `BITCOUNT` | `r.getbit(k,7)` / `r.bitcount(k)` | `1` / `1` |
+| `PFADD k u1 u2` | `r.pfadd(k,'u1','u2')` | `1`（**1=基数有变化**） |
+| `PFCOUNT` | `r.pfcount(k)` | `2` |
+| `GEOADD k 116.40 39.90 bj` | `r.geoadd(k,116.40,39.90,'bj')` | `1` |
+| `GEOSEARCH ...` | `r.call('GEOSEARCH',...)`（参数太多，用 `call`） | `["bj"]` |
+| `GEODIST` | `r.geodist(k,'bj','bj')` | **`"0.0000"`**（字符串） |
+
+**四条贯穿全表的规律**：
+1. **计数/位值/长度 → 数字**（`EXISTS` `STRLEN` `SISMEMBER` `SETBIT` `PFADD`）
+2. **浮点数一律字符串**（`INCRBYFLOAT` `ZSCORE` `GEODIST`）
+3. **`WITHSCORES` / `HSCAN` 都是扁平数组**，不是对象/嵌套
+4. **`nil` → `null`，`(empty array)` → `[]`，但"参数太多别硬凑"的命令用 `r.call(...)` 照抄 CLI**
