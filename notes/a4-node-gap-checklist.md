@@ -137,7 +137,7 @@ sub.on('pmessage', (pattern, channel, message) => {});   // ← 三个参数
 ### 14. 连接层选项 —— 讲了，**没实操**
 ⬜ `maxRetriesPerRequest`（超了抛 `MaxRetriesPerRequestError`）
 ⬜ `enableOfflineQueue: false`（断线时命令立即 reject）
-⬜ `keyPrefix`（对 `KEYS`/`SCAN` 返回值不去前缀；对 `EVAL` 的 KEYS 不生效）
+✅ `keyPrefix` —— **11/23 实测，结论与旧说法相反，见文末 §六**
 ⬜ `commandTimeout`（单条命令超时）
 
 ### 15. 更后面
@@ -233,3 +233,37 @@ sub.on('pmessage', (pattern, channel, message) => {});   // ← 三个参数
 2. **浮点数一律字符串**（`INCRBYFLOAT` `ZSCORE` `GEODIST`）
 3. **`WITHSCORES` / `HSCAN` 都是扁平数组**，不是对象/嵌套
 4. **`nil` → `null`，`(empty array)` → `[]`，但"参数太多别硬凑"的命令用 `r.call(...)` 照抄 CLI**
+
+---
+
+## 六、⭐ `keyPrefix` 的三个不对称（2026-11-23 实测，**推翻旧说法**）
+
+> 旧说法（我写的）：「`KEYS`/`SCAN` 返回值不去前缀；`EVAL` 的 `KEYS[]` 不生效」——**前半对、后半错**。
+
+| 场景 | 加不加前缀 | 返回的键 | 结论 |
+|---|---|---|---|
+| `set('pf:a')` / `get('pf:a')` | **加** | — | 正常 |
+| **`keys('pf:*')` / `scan(0,'MATCH','pf:*')`** | ⚠️ **不加** | — | **匹配不到**（真键是 `p2:dev:pf:*`），返回 `[]` |
+| `keys('p2:dev:pf:*')`（自己写全名） | 不再加 | ⚠️ **带前缀** | 实测 `["p2:dev:pf:a"]`，要自己 `.slice(len)` 剥 |
+| **`eval(script, 1, 'pf:a')`** | ⚠️ **加** | — | 实测能取到值 |
+| `eval(script, 1, 'p2:dev:pf:a')` | **又加一次** → `p2:dev:p2:dev:pf:a` | — | **拿到 `null`** |
+
+**背这一句**：
+> **`keyPrefix` 只认"数据键"：`KEYS`/`SCAN` 的 `MATCH` 模式不算键（不加），`EVAL` 的 `KEYS[]` 算键（加）。所有返回的键都带前缀，要自己剥。**
+
+**其余选项实测（同日）**：
+
+| 选项 | 真实行为 | 证据 |
+|---|---|---|
+| `maxRetriesPerRequest: 1` | 超过就抛 | `MaxRetriesPerRequestError: Reached the max retries per request limit (which is 1)` |
+| `enableOfflineQueue: false` | 断线时**立刻 reject** | `Connection is closed.` |
+| `commandTimeout: 60` | **客户端主动放弃**，不等服务端 | `Command timed out (69ms)`（`BLPOP 5` 只花了 69ms） |
+
+**`XINFO` / `XAUTOCLAIM` 形状（实测，全是扁平数组）**：
+
+```
+XINFO STREAM    → ["length",2,"radix-tree-keys",1,…,"entries-added",2]
+XINFO GROUPS    → [["name","g1","consumers",0,"pending",0,"last-delivered-id","0-0","entries-read",null,"lag",3]]
+XINFO CONSUMERS → [["name","c1","pending",1,"idle",2,"inactive",2]]
+XAUTOCLAIM      → ["0-0", [["<id>",["f","v1"]]], []]    ← 三元组：下次游标 / 认领到的 / 已删除的
+```
