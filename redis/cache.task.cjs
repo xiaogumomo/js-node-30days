@@ -147,20 +147,7 @@ async function getOrLoad(cache, key, loader, opts = {}) {
        while(round <= maxWaitRounds){
           await sleep(waitMs);
           const again =deserializeEntry( await cache.get(key));
-          if(again !== null){
-              // try{
-              // const v = await loader();
-              // if(v === null || v === undefined ){
-              //   await cache.set(key,serializeEntry({value:wrap(v),  expireAt : Date.now() +  ttlMs }),'EX',60);
-              //   return null ;
-              // }; 
-              // await cache.set(key,serializeEntry({value:wrap(v), expireAt : Date.now() +  ttlMs }));
-              // return v ;
-              
-              // }finally{
-              //   await cache.eval(
-              //   "if redis.call('get',KEYS[1]) == ARGV[1] then redis.call('del',KEYS[1]) else return 0 end" ,1, lockkey,token);
-              // }       
+          if(again !== null){  
               return again.value === SENTINEL ? null : again.value ;
           }
           round ++ ;

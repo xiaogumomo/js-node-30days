@@ -34,7 +34,7 @@ async function scanAll(redis,matchPattern,{count = 100} = {}){
         strings = strings.concat(result[1]);
     };
     for(let i = 0 ; i < strings.length ; i ++){
-         strings[i] = strings[i].slice(redis.options.keyPrefix.length)
+         strings[i] = strings[i].slice((redis.options.keyPrefix || '').length)
     }
     
     return strings ;
